@@ -28,6 +28,7 @@ __disp_clk_t disp_clk_tbl[] =
         disp_clk_inf(SYS_CLK_PLL5P,     CLK_SYS_PLL5P           ),
         disp_clk_inf(SYS_CLK_PLL6,      CLK_SYS_PLL6            ),
         disp_clk_inf(SYS_CLK_PLL6M,     CLK_SYS_PLL6M           ),
+        disp_clk_inf(SYS_CLK_PLL6X2,    CLK_SYS_PLL6X2          ),
         disp_clk_inf(SYS_CLK_PLL7X2,    CLK_SYS_PLL7X2          ),
 
         disp_clk_inf(MOD_CLK_DEBE0,     CLK_MOD_DEBE0           ),

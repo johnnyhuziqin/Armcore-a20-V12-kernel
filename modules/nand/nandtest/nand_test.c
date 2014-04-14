@@ -48,7 +48,7 @@
 #include "../src/include/nand_simple.h"
 
 #include "../nfd/nand_blk.h"
-
+#include "../nfd/mbr.h"
 
 #include "nand_test.h"
 
