@@ -1274,7 +1274,7 @@ static void sw_mci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			break;
 		case MMC_POWER_UP:
 			if (!smc_host->power_on) {
-				SMC_DBG(smc_host, "sdc%d power on\n", smc_host->pdev->id);
+				SMC_MSG(smc_host, "sdc%d power on\n", smc_host->pdev->id);
 				sw_mci_restore_io(smc_host);
 				err = clk_enable(smc_host->hclk);
 				if (err) {
@@ -1299,7 +1299,7 @@ static void sw_mci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			break;
 		case MMC_POWER_OFF:
 			if (smc_host->power_on) {
-				SMC_DBG(smc_host, "sdc%d power off\n", smc_host->pdev->id);
+				SMC_MSG(smc_host, "sdc%d power off\n", smc_host->pdev->id);
 				disable_irq(smc_host->irq);
 				sw_mci_exit_host(smc_host);
 				err = clk_reset(smc_host->mclk, AW_CCU_CLK_RESET);
@@ -2055,6 +2055,16 @@ static int __devinit sw_mci_probe(struct platform_device *pdev)
 		SMC_ERR(smc_host, "%s: Failed to get resouce.\n", dev_name(&pdev->dev));
 		goto probe_free_host;
 	}
+
+    smc_host->mod_clk = 400000;
+    if (sw_mci_set_clk(smc_host, 400000)) {
+        SMC_ERR(smc_host, "Failed to set clock to 400KHz\n");
+        ret = -ENOENT;
+        goto probe_free_resource;
+    }
+    clk_enable(smc_host->mclk);
+    clk_enable(smc_host->hclk);
+    sw_mci_init_host(smc_host);
 
 	sw_mci_procfs_attach(smc_host);
 

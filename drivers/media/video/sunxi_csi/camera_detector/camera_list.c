@@ -157,6 +157,12 @@ __u32 camera_i2c_write(struct i2c_adapter *i2c_adap, __u8 *reg, __u8 *value,
 	return ret;
 }
 
+ void camera_stby_on_sensor(__u32 list_index, __camera_info_t *camera_info)
+{    
+    //reset on io
+    camera_gpio_write(camera_info->stby_pin, camera_list[list_index].CSI_STBY_ON);
+}
+
 #define __OV7670__
 
 static void camera_pwr_on_ov7670(__u32 list_index, __camera_info_t *camera_info)
@@ -224,7 +230,7 @@ static void camera_pwr_off_ov7670(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
 }
 
 static __s32 camera_detect_ov7670(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -299,7 +305,7 @@ static void camera_pwr_on_gc2035(__u32 list_index, __camera_info_t *camera_info)
 		mdelay(10);
 
 		camera_gpio_write(camera_info->reset_pin, camera_list[list_index].CSI_RST_ON);
-		mdelay(30);
+		mdelay(10);
 
 		camera_gpio_write(camera_info->reset_pin, camera_list[list_index].CSI_RST_OFF);
 		mdelay(10);    
@@ -331,7 +337,7 @@ static void camera_pwr_off_gc2035(__u32 list_index, __camera_info_t *camera_info
    clk_disable(camera_info->module_clk);
     //set the io to hi-z
     camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-    camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
+   // camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
 }
 
 static __s32 camera_detect_gc2035(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -388,7 +394,7 @@ static void camera_pwr_on_gc0308(__u32 list_index, __camera_info_t *camera_info)
     mdelay(10);
     
     //standby off io
-    camera_gpio_write(camera_info->stby_pin, camera_list[list_index].CSI_STBY_OFF);
+    camera_gpio_write(camera_info->stby_pin, camera_list[list_index].CSI_STBY_OFF); 
     mdelay(10);
     
     clk_enable(camera_info->module_clk);
@@ -425,7 +431,7 @@ static void camera_pwr_off_gc0308(__u32 list_index, __camera_info_t *camera_info
     mdelay(10);
     //set the io to hi-z
     camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-    camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
+    //camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
 }
 
 static __s32 camera_detect_gc0308(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -526,7 +532,7 @@ static void camera_pwr_off_gt2005(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
 }
 
 static __s32 camera_detect_gt2005(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -621,7 +627,7 @@ static void camera_pwr_off_hi704(__u32 list_index, __camera_info_t *camera_info)
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
 }
 
 static __s32 camera_detect_hi704(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -721,7 +727,7 @@ static void camera_pwr_off_sp0838(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
 }
 
 static __s32 camera_detect_sp0838(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -822,7 +828,7 @@ static void camera_pwr_off_mt9m112(__u32 list_index, __camera_info_t *camera_inf
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input        
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input        
 }
 
 static __s32 camera_detect_mt9m112(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -925,7 +931,7 @@ static void camera_pwr_off_mt9m113(__u32 list_index, __camera_info_t *camera_inf
     clk_disable(camera_info->module_clk);
     //set the io to hi-z
     camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-    camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input   
+    //camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input   
 }
 
 static __s32 camera_detect_mt9m113(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1020,7 +1026,7 @@ static void camera_pwr_off_ov2655(__u32 list_index, __camera_info_t *camera_info
     clk_disable(camera_info->module_clk);
     //set the io to hi-z
     camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-    camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
+    //camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
 }
 
 static __s32 camera_detect_ov2655(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1125,7 +1131,7 @@ static void camera_pwr_off_hi253(__u32 list_index, __camera_info_t *camera_info)
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
 }
 
 static __s32 camera_detect_hi253(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1226,7 +1232,7 @@ static void camera_pwr_off_gc0307(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
 }
 
 static __s32 camera_detect_gc0307(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1327,7 +1333,7 @@ static void camera_pwr_off_mt9d112(__u32 list_index, __camera_info_t *camera_inf
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
 }
 
 static __s32 camera_detect_mt9d112(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1425,7 +1431,7 @@ static void camera_pwr_off_ov5640(__u32 list_index, __camera_info_t *camera_info
 
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
 }
 
 static __s32 camera_detect_ov5640(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1532,7 +1538,7 @@ static void camera_pwr_off_gc2015(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input
 }
 
 static __s32 camera_detect_gc2015(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1646,7 +1652,7 @@ static void camera_pwr_off_ov2643(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin, 0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin, 0);//set the gpio to input    
 }
 
 static __s32 camera_detect_ov2643(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1753,7 +1759,7 @@ static void camera_pwr_off_gc0329(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
 }
 
 static __s32 camera_detect_gc0329(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -1854,7 +1860,7 @@ static void camera_pwr_off_gc0309(__u32 list_index, __camera_info_t *camera_info
 	clk_disable(camera_info->module_clk);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
 }
 
 static __s32 camera_detect_gc0309(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -2036,7 +2042,7 @@ static void camera_pwr_off_s5k4ec(__u32 list_index, __camera_info_t *camera_info
 	camera_gpio_write(camera_info->pwr_pin, camera_list[list_index].CSI_PWR_OFF);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input
 }
 
 static __s32 camera_detect_s5k4ec(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -2150,7 +2156,7 @@ static void camera_pwr_off_ov5650_mv9335(__u32 list_index, __camera_info_t *came
 	camera_gpio_write(camera_info->pwr_pin, camera_list[list_index].CSI_PWR_OFF);
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to input
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to input    
 }
 
 static __s32 camera_detect_ov5650_mv9335(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -2252,7 +2258,7 @@ static void camera_pwr_off_siv121d(__u32 list_index, __camera_info_t *camera_inf
 	
 	//set the io to hi-z
 	camera_gpio_set_status(camera_info->reset_pin,0);//set the gpio to output
-	camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to output
+	//camera_gpio_set_status(camera_info->stby_pin,0);//set the gpio to output
 }
 
 static __s32 camera_detect_siv121d(__u32 list_index, struct i2c_adapter *i2c_adap)
@@ -2289,7 +2295,7 @@ static __s32 camera_detect_siv121d(__u32 list_index, struct i2c_adapter *i2c_ada
 __camera_list_t camera_list[MAX_CAMERA_LIST_ITEM] = {
     CAMERA_LIST_ITEM_INIT(ov7670,        1, 1, 0x42, 1, 0, 0, 1, 1, 0),
     CAMERA_LIST_ITEM_INIT(gc2035,        1, 1, 0x78, 1, 0, 0, 1, 1, 0),
-    CAMERA_LIST_ITEM_INIT(gc0308,        1, 1, 0x42, 1, 0, 0, 1, 1, 0),
+    CAMERA_LIST_ITEM_INIT(gc0308,        1, 1, 0x42, 1, 0, 0, 1, 1, 0), 
     CAMERA_LIST_ITEM_INIT(gt2005,        2, 1, 0x78, 0, 1, 0, 1, 1, 0),
     CAMERA_LIST_ITEM_INIT(hi704,         1, 1, 0x60, 1, 0, 0, 1, 1, 0),
     CAMERA_LIST_ITEM_INIT(sp0838,        1, 1, 0x30, 1, 0, 0, 1, 1, 0),

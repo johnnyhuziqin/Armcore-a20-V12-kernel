@@ -15,3 +15,9 @@ config AW_ASIC_PLATFORM
         Support for Allwinner's ASIC board
 
 endchoice
+
+config SW_POWERNOW
+    bool "Enable sw_powernow feature"
+    default y
+    help
+        Support for sw_powernow function

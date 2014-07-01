@@ -1454,7 +1454,7 @@ static int sensor_write_array(struct v4l2_subdev *sd, struct regval_list *vals ,
 	
 	for(i = 0; i < size ; i++)
 	{
-		if(vals->reg_num[0] == 0xff && vals->reg_num[1] == 0xff) {
+		if(vals->reg_num[0] == 0xff) {
 			mdelay(vals->value[0]);
 		} else {
 			ret = sensor_write(sd, vals->reg_num, vals->value);
@@ -2295,12 +2295,13 @@ static int sensor_s_hflip(struct v4l2_subdev *sd, int value)
 		return ret;
 	}
 	
+	regs.value[0] &= 0xfc;
 	switch (value) {
 		case 0:
-		  regs.value[0] &= 0xfe;
+		  regs.value[0] |= info->vflip<<1;
 			break;
 		case 1:
-			regs.value[0] |= 0x01;
+			regs.value[0] |= (0x01|(info->vflip<<1));
 			break;
 		default:
 			return -EINVAL;
@@ -2368,12 +2369,13 @@ static int sensor_s_vflip(struct v4l2_subdev *sd, int value)
 		return ret;
 	}
 	
+	regs.value[0] &= 0xfc;
 	switch (value) {
 		case 0:
-		  regs.value[0] &= 0xfd;
+		  regs.value[0] |=info->hflip;
 			break;
 		case 1:
-			regs.value[0] |= 0x02;
+			regs.value[0] |= (0x02|info->hflip);
 			break;
 		default:
 			return -EINVAL;

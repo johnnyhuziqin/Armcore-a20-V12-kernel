@@ -462,6 +462,12 @@ __s32 DRAMC_init(__dram_para_t *para)
 
 //      super_standby_flag = 1;
 
+    	//disable auto-fresh			//by cpl 2013-5-6
+    	reg_val = mctl_read_w(SDR_DRR);
+    	reg_val |= 0x1U<<31;
+    	mctl_write_w(SDR_DRR, reg_val);
+
+
         reg_val = mctl_read_w(SDR_GP_REG0);
         reg_val &= 0x000fffff;
         mctl_write_w(SDR_GP_REG0, reg_val);
@@ -491,6 +497,11 @@ __s32 DRAMC_init(__dram_para_t *para)
     
         //check whether command has been executed
         while( mctl_read_w(SDR_DCR)& (0x1U<<31) );
+    	//disable auto-fresh			//by cpl 2013-5-6
+    	reg_val = mctl_read_w(SDR_DRR);
+    	reg_val &= ~(0x1U<<31);
+    	mctl_write_w(SDR_DRR, reg_val);
+
         mem_delay(0x100);;
     
 //        //issue a refresh command

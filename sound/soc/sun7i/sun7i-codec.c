@@ -37,6 +37,14 @@
 static int capture_used = 1;
 static script_item_u item;
 struct clk *codec_apbclk,*codec_pll2clk,*codec_moduleclk;
+
+static int g_tvin_audio_to_hdmi = 0; // add by cjcheng. 2014-03-07
+int smdt_tvin_flag = 0;
+EXPORT_SYMBOL(smdt_tvin_flag);
+extern void headset_lradc(void);
+int codec_play_flag = 0;
+EXPORT_SYMBOL(codec_play_flag);
+
 static volatile unsigned int capture_dmasrc = 0;
 static volatile unsigned int capture_dmadst = 0;
 static volatile unsigned int play_dmasrc 	= 0;
@@ -419,6 +427,22 @@ static int codec_set_speakerout(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+// add by cjcheng start. 2014-03-07
+static int codec_set_tvinhdmiout(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+    g_tvin_audio_to_hdmi = ucontrol->value.integer.value[0];
+    return 0;
+}
+
+static int codec_get_tvinhdmiout(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = g_tvin_audio_to_hdmi;
+    return 0;
+}
+// add by cjcheng end. 2014-03-07
+
 /*
 *	codec_earpiece_enabled == 1,mixpas pa-en and pa_unmute you can play the line from earpiece.
 *	codec_earpiece_enabled == 0,	
@@ -440,7 +464,14 @@ static int codec_set_earpieceout(struct snd_kcontrol *kcontrol,
 		/*EN  MIXPAS*/
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, MIXPAS, 0x1);
 		/*EN PA*/
-		codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x1);
+        // add by cjcheng start. 2014-03-07
+        if (g_tvin_audio_to_hdmi){
+            codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x0);
+            codec_wr_control(SUN7I_ADC_ACTL, 0x3, ADC_SELECT, 0x0);
+        }else{
+            codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x1);
+        }
+        // add by cjcheng end. 2014-03-07
 		/*PA UNMUTE*/
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, PA_MUTE, 0x1);
 		codec_speakerout_enabled=0;
@@ -453,7 +484,11 @@ static int codec_set_earpieceout(struct snd_kcontrol *kcontrol,
 		/*disable  MIXPAS*/
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, MIXPAS, 0x0);
 		/*disable PA*/
-		codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x0);
+		codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x1);
+        // add by cjcheng start. 2014-03-07
+        if (g_tvin_audio_to_hdmi)
+            codec_wr_control(SUN7I_ADC_ACTL, 0x3, ADC_SELECT, 0x2);
+        // add by cjcheng end. 2014-03-07
 		/*PA MUTE*/
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, PA_MUTE, 0x0);
 	}
@@ -696,6 +731,7 @@ static const struct snd_kcontrol_new codec_snd_controls[] = {
 	*/
 	SOC_SINGLE_BOOL_EXT("Audio speaker out", 0, codec_get_speakerout, codec_set_speakerout),
 	/*Mobile phone down simulation channel interface*/	
+	SOC_SINGLE_BOOL_EXT("Audio tvinhdmi out", 0, codec_get_tvinhdmiout, codec_set_tvinhdmiout), // add by cjcheng. 2014-03-07
 	SOC_SINGLE_BOOL_EXT("Audio earpiece out", 0, codec_get_earpieceout, codec_set_earpieceout),		  
 	/*Mobile phone uplink analog channel interface */	
 	SOC_SINGLE_BOOL_EXT("Audio dac phoneout", 0, codec_get_dacphoneout, codec_set_dacphoneout),    		

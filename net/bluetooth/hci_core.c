@@ -1477,7 +1477,6 @@ int hci_register_dev(struct hci_dev *hdev)
 
 	sprintf(hdev->name, "hci%d", id);
 	hdev->id = id;
-	list_add_tail(&hdev->list, head);
 
 	atomic_set(&hdev->refcnt, 1);
 	mutex_init(&hdev->lock);
@@ -1545,6 +1544,9 @@ int hci_register_dev(struct hci_dev *hdev)
 		goto err;
 	}
 
+	write_lock(&hci_dev_list_lock);
+	list_add_tail(&hdev->list, head);
+	write_unlock(&hci_dev_list_lock);
 	error = hci_add_sysfs(hdev);
 	if (error < 0)
 		goto err_wqueue;
@@ -1567,12 +1569,12 @@ int hci_register_dev(struct hci_dev *hdev)
 	return id;
 
 err_wqueue:
-	destroy_workqueue(hdev->workqueue);
-err:
 	write_lock(&hci_dev_list_lock);
 	list_del(&hdev->list);
 	write_unlock(&hci_dev_list_lock);
 
+	destroy_workqueue(hdev->workqueue);
+err:
 	return error;
 }
 EXPORT_SYMBOL(hci_register_dev);

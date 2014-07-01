@@ -76,7 +76,7 @@ long disp_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
 
 __s32 disp_create_heap(__u32 pHeapHead, __u32 pHeapHeadPhy, __u32 nHeapSize);
 void *disp_malloc(__u32 num_bytes, __u32 *phy_addr);
-void  disp_free(void *p);
+void  disp_free(void *virt_addr, void* phy_addr);
 
 
 extern __s32 Display_Fb_Request(__u32 fb_id, __disp_fb_create_para_t *fb_para);

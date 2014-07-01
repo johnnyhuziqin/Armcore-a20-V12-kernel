@@ -42,11 +42,10 @@
 #include <mach/sys_config.h>
 #include <mach/clock.h>
 #include <mach/platform.h>
-#include <mach/system.h>
 
 #include "sun7i_wemac.h"
 
-#undef	PHY_POWER
+#define	PHY_POWER
 #undef	DYNAMIC_MAC_SYSCONFIG
 #define	SYSCONFIG_GPIO
 #define	SYSCONFIG_CCMU
@@ -89,7 +88,6 @@ MODULE_PARM_DESC(mac_str, "MAC Address String, ex. xx:xx:xx:xx:xx:xx");
  * Transmit timeout, default 5 seconds.
  */
 static int 	watchdog = 5000;
-unsigned char 	mac_addr[6] = {0x00};
 module_param(watchdog, int, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(watchdog, "Transmit timeout in milliseconds");
 
@@ -173,7 +171,6 @@ static void wemac_phy_write(struct net_device *dev,
 							int phyaddr_unused, int reg, int value);
 static void wemac_rx(struct net_device *dev);
 static void wemac_get_macaddr(wemac_board_info_t *db);
-static void read_random_macaddr(unsigned char *mac, struct net_device *ndev);
 static void emac_reg_dump(wemac_board_info_t *db);
 static void phy_reg_dump(wemac_board_info_t *db);
 static void pkt_dump(unsigned char *buf, int len);
@@ -504,6 +501,9 @@ void emac_sys_setup(wemac_board_info_t * db)
     if(!gpio_num){
        printk(KERN_ERR "ERROR: emac get  gpio resources from sysconfig failed!!!\n");
     } else {
+        /* someone maybe have a power pin, and we could not request it here*/
+        if (gpio_num > 18)
+            gpio_num = 18;
         for(i = 0; i < gpio_num; i++) {
             if (0 != gpio_request(db->gpio_list[i].gpio.gpio, NULL)){
                 printk(KERN_ERR"----------------------EMAC---------------------\n\n");
@@ -864,34 +864,6 @@ static void wemac_set_rx_mode(struct net_device *dev)
 	spin_unlock_irqrestore(&db->lock,flags);
 }
 
-static void read_random_macaddr(unsigned char *mac, struct net_device *ndev)
-{
-	unsigned char *buf = mac;
-	struct sw_chip_id chip_id;
-	wemac_board_info_t * db = netdev_priv(ndev);
-	
-	sw_get_chip_id(&chip_id);
-	
-	buf[0] = 0x20;
-	buf[1] = 0x59;	
-	buf[2] = (unsigned char)(chip_id.sid_rkey0&0x000000ff);
-	buf[3] = (unsigned char)(chip_id.sid_rkey3&0x000000ff);
-	buf[4] = (unsigned char)((chip_id.sid_rkey3>>8)&0x000000ff);
-	buf[5] = (unsigned char)((chip_id.sid_rkey3>>16)&0x000000ff);
-//	get_random_bytes(buf, 6);
-	
-
-	buf[0] &= 0xfe;		/*  the 48bit must set 0  */
-	buf[0] |= 0x02;		/*  the 47bit must set 1  */
-
-	/*  we write the random number into chip  */
-	writel(buf[0]<<16 | buf[1]<<8 | buf[2],
-			db->emac_vbase + EMAC_MAC_A1_REG);
-	writel(buf[3]<<16 | buf[4]<<8 | buf[5],
-			db->emac_vbase + EMAC_MAC_A0_REG);
-
-}
-
 static int wemac_set_mac_address(struct net_device *dev, void *p)
 {
 	struct sockaddr *addr = p;
@@ -928,11 +900,12 @@ static int wemac_phy_init(wemac_board_info_t *db)
     
     if (db->mos_gpio){
         db->mos_gpio->gpio.data = 1;
+		gpio_direction_output(db->mos_gpio->gpio.gpio,1);
         __gpio_set_value(db->mos_gpio->gpio.gpio, db->mos_gpio->gpio.data);
     }
 
 #endif
-
+	mdelay(50);
 	reg_val = readl(db->emac_vbase + EMAC_MAC_SUPP_REG);
 	reg_val |= 0x1<<15;
 	writel(reg_val, db->emac_vbase + EMAC_MAC_SUPP_REG);
@@ -1633,7 +1606,6 @@ static int __devinit wemac_probe(struct platform_device *pdev)
 #endif
 	int ret = 0;
 	int iosize;
-	unsigned int reg_val;
 
 	/* Init network device */
 	ndev = alloc_etherdev(sizeof(struct wemac_board_info));
@@ -1838,27 +1810,7 @@ static int __devinit wemac_probe(struct platform_device *pdev)
 	db->mii.mdio_read    = wemac_phy_read;
 	db->mii.mdio_write   = wemac_phy_write;
 
-	if (!is_valid_ether_addr(ndev->dev_addr)) {
-
-		reg_val = readl(db->emac_vbase + EMAC_MAC_A1_REG);
-		*(ndev->dev_addr+0) = (reg_val>>16) & 0xff;
-		*(ndev->dev_addr+1) = (reg_val>>8) & 0xff;
-		*(ndev->dev_addr+2) = (reg_val>>0) & 0xff;
-		reg_val = readl(db->emac_vbase + EMAC_MAC_A0_REG);
-		*(ndev->dev_addr+3) = (reg_val>>16) & 0xff;
-		*(ndev->dev_addr+4) = (reg_val>>8) & 0xff;
-		*(ndev->dev_addr+5) = (reg_val>>0) & 0xff;
-	}
-
-	if (!is_valid_ether_addr(ndev->dev_addr))
-		read_random_macaddr(mac_addr, ndev);
-
-	printk("mac_addr: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_addr[0], mac_addr[1], mac_addr[2],
-			mac_addr[3], mac_addr[4], mac_addr[5]);
-
-	memcpy(ndev->dev_addr, mac_addr, 6);
-	if (!is_valid_ether_addr(ndev->dev_addr))
-		printk(KERN_ERR "Invalid MAC address. Please set using ifconfig\n");
+	wemac_get_macaddr(db);
 
 	platform_set_drvdata(pdev, ndev);
 	ret = register_netdev(ndev);

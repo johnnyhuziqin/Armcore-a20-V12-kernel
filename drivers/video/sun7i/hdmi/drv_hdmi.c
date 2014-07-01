@@ -228,6 +228,20 @@ __s32 Hdmi_set_pll(__u32 pll, __u32 clk)
         return 0;
 }
 
+__s32 Hdmi_dvi_enable(__u32 mode)
+{
+	return Hdmi_hal_cts_enable(mode);//Hdmi_hal_dvi_enable(mode);
+}
+
+__s32 Hdmi_dvi_support(void)
+{
+    	return Hdmi_hal_dvi_support();
+}
+
+__s32 Hdmi_get_input_csc(void)
+{
+        return Hmdi_hal_get_input_csc();
+}
 int Hdmi_run_thread(void *parg)
 {
 	while (1)
@@ -357,7 +371,9 @@ __s32 Hdmi_init(void)
         	disp_func.hdmi_mode_support = Hdmi_mode_support;
         	disp_func.hdmi_get_HPD_status = Hdmi_get_HPD_status;
         	disp_func.hdmi_set_pll = Hdmi_set_pll;
-            
+		disp_func.hdmi_dvi_enable= Hdmi_dvi_enable;
+		disp_func.hdmi_dvi_support= Hdmi_dvi_support;
+                disp_func.hdmi_get_input_csc = Hdmi_get_input_csc;
                 disp_func.hdmi_suspend = Hdmi_suspend;
                 disp_func.hdmi_resume = Hdmi_resume;
         	disp_set_hdmi_func(&disp_func);

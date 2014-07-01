@@ -3,9 +3,13 @@
 __s32 			hdmi_state	=	HDMI_State_Idle;
 __bool                  video_enable = 0;
 __s32 			video_mode  = 	HDMI720P_50;
-HDMI_AUDIO_INFO         audio_info;
+__s32       cts_enable  = 0;
+HDMI_AUDIO_INFO audio_info;
 __u8			EDID_Buf[1024];
 __u8 			Device_Support_VIC[512];
+__u8                    isHDMI = 0;
+__u8                    YCbCr444_Support = 0; 
+__u32     		rgb_only = 0;
 __s32                   HPD = 0;
 __u32                   hdmi_print = 0;
 
@@ -52,19 +56,20 @@ __s32 main_Hpd_Check(void)
 
 	for(i=0;i<3;i++)
 	{
-		hdmi_delay_ms(1);
+		hdmi_delay_ms(200);
 		if( HDMI_RUINT32(0x00c)&0x01)
 			times++;
 	}
 	if(times == 3)      
-	   return 1;
+	        return 1;
 	else
-	   return 0;
+	        return 0;
 }
 
 __s32 hdmi_main_task_loop(void)
 {
 	static __u32 times = 0;
+        static __u32 hdmipll_lock_value;
 	
 	HPD = main_Hpd_Check();
 	if( !HPD )
@@ -103,7 +108,7 @@ __s32 hdmi_main_task_loop(void)
     	        case HDMI_State_EDID_Parse:
                         HDMI_WUINT32(0x004,0x80000000);
                         HDMI_WUINT32(0x208,(1<<31)+ (1<<30)+ (1<<29)+ (3<<27)+ (0<<26)+ 
-                        	       (1<<25)+ (0<<24)+ (0<<23)+ (4<<20)+ (7<<17)+
+                        	       (1<<25)+ (0<<24)+ (1<<23)+ (4<<20)+ (7<<17)+
                         	       (15<<12)+ (7<<8)+ (0x0f<<4)+(8<<0) );	  
                         HDMI_WUINT32(0x200,0xfe800000);   			//txen enable
                         HDMI_WUINT32(0x204,0x00D8C850);   			//ckss = 1
@@ -135,6 +140,10 @@ __s32 hdmi_main_task_loop(void)
                         hdmi_state = 	HDMI_State_Playback;    
     		 
     	        case HDMI_State_Playback:
+                        hdmi_delay_ms(1);
+                        hdmipll_lock_value  = HDMI_RUINT32(0x210) & 0x3f ;
+                        hdmipll_lock_value  = (hdmipll_lock_value << 8) | (HDMI_RUINT32(0x20c)&0xffff00ff);
+                        HDMI_WUINT32(0x20c,hdmipll_lock_value | (1<<17)); 
     		        return 0;  
     		 
 		default:
@@ -315,8 +324,17 @@ __s32 video_config(__s32 vic)
     HDMI_WUINT8 (0x081,0x02);
     HDMI_WUINT8 (0x082,0x0d);
     HDMI_WUINT8 (0x083,0x00);
-    HDMI_WUINT8 (0x084,0x50);
-    if( video_timing[vic_tab].PCLK < 74250000)				//SD format
+    if(cts_enable &&(!YCbCr444_Support))
+    {
+        HDMI_WUINT8 (0x084,0x10);								//RGB444
+        __inf("HDMI RGB444 output mode\n");
+    }
+    else
+    {
+        HDMI_WUINT8 (0x084,0x50);									//YCbCr444
+        __inf("HDMI YCbCr444 output mode\n");
+    }
+    if( video_timing[vic_tab].PCLK < 74250000)	//SD format
     {
     	HDMI_WUINT8 (0x085,0x58);							//4:3 601
     }else													//HD format
@@ -396,9 +414,17 @@ __s32 video_config(__s32 vic)
       
     HDMI_WUINT32(0x300,0x08000000);			// set input sync enable
     
-    HDMI_WUINT8 (0x013,0xc0);				//hdmi mode  
-    HDMI_WUINT32(0x004,0x80000000);			//start hdmi controller	    
-    //////////////////////    
+    if( (cts_enable == 0) || isHDMI)
+    {
+        __inf("hdmi mode:  cts_enable=%d, isHDMI=%d\n", cts_enable,isHDMI);
+        HDMI_WUINT8 (0x013,0xc0);				//hdmi mode
+    }else
+    {
+        __inf("dvi mode:   cts_enable=%d, isHDMI=%d\n", cts_enable,isHDMI);
+        HDMI_WUINT8 (0x013,0x80);				//dvi mode
+    }
+    HDMI_WUINT32(0x004,0x80000000);			//start hdmi controller
+    //////////////////////
     //hdmi pll setting
     if( (vic == HDMI1440_480I) || (vic == HDMI1440_576I))
     {
@@ -411,7 +437,7 @@ __s32 video_config(__s32 vic)
     }
 	clk_div &= 0x0f;
 	HDMI_WUINT32(0x208,(1<<31)+ (1<<30)+ (1<<29)+ (3<<27)+ (0<<26)+ 
-	    		       (1<<25)+ (0<<24)+ (0<<23)+ (4<<20)+ (7<<17)+
+	    		       (1<<25)+ (0<<24)+ (1<<23)+ (4<<20)+ (7<<17)+
 	    		       (15<<12)+ (7<<8)+ (clk_div<<4)+(8<<0) );	
 	// tx driver setting
  	HDMI_WUINT32(0x200,0xfe800000);   			//txen enable
@@ -426,8 +452,8 @@ __s32 audio_config(void)
 {
 	__s32 i;
 
-	__inf("audio_config, sample_rate:%d\n", audio_info.sample_rate);
-	
+        __inf("audio_config, sample_rate:%d\n", audio_info.sample_rate);
+
 	HDMI_WUINT32(0x040,0x00000000);
 	HDMI_WUINT32(0x040,0x40000000);
 	while(HDMI_RUINT32(0x040) != 0);
@@ -445,7 +471,7 @@ __s32 audio_config(void)
 	}	
 	
 	if(audio_info.channel_num == 1)
-    {
+        {
           HDMI_WUINT32(0x044,0x00000000);             	//audio fifo rst and select ddma, 2 ch 16bit pcm 
           HDMI_WUINT32(0x048,0x00000000);				//ddma,pcm layout0 1ch
           HDMI_WUINT32(0x04c,0x76543200);
@@ -454,10 +480,17 @@ __s32 audio_config(void)
           HDMI_WUINT32(0x0A4,0x00000000);             	//CA = 0X1F 
           HDMI_WUINT32(0x0A8,0x00000000); 
           HDMI_WUINT32(0x0Ac,0x00000000);           
-    }else  if(audio_info.channel_num == 2)
-    {
+        }else  if(audio_info.channel_num == 2)
+        {
           HDMI_WUINT32(0x044,0x00000000);             	//audio fifo rst and select ddma, 2 ch 16bit pcm 
-          HDMI_WUINT32(0x048,0x00000001);				//ddma,pcm layout0 2ch
+          if(audio_info.data_raw == 0)
+          {
+                HDMI_WUINT32(0x048,0x00000001);				//ddma,pcm layout0 2ch
+          }
+          else
+          {
+                HDMI_WUINT32(0x048,0x01000001);				//ddma,raw layout0 2ch
+          }
           HDMI_WUINT32(0x04c,0x76543210);
 		  
           HDMI_WUINT32(0x0A0,0x710a0184);             	//audio infoframe head 

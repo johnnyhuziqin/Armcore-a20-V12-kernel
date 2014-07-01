@@ -62,6 +62,8 @@ obj-$(CONFIG_DCC_TTY)		+= dcc_tty.o
 obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
 obj-$(CONFIG_RAMOOPS)		+= ramoops.o
 
+#obj-$(CONFIG_MCUINF)		+= mcuinf.o
+obj-$(CONFIG_A20_BOOT)    += a20_boot.o
 obj-$(CONFIG_JS_RTC)		+= js-rtc.o
 
 obj-$(CONFIG_DMA_TEST_DRIVER)	+= dma_test/
@@ -74,5 +76,3 @@ obj-$(CONFIG_TILE_SROM)		+= tile-srom.o
 obj-$(CONFIG_SUNXI_TIMER_TEST)	+= timer_test/
 obj-$(CONFIG_SUNXI_PHYS_MEM_ALLOCATOR)	+= sunxi_mem/
 obj-$(CONFIG_SUNXI_MEM_TEST)		+= sunxi_mem_test/
-
-obj-y                           += smdt_led.o

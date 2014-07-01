@@ -248,109 +248,112 @@ __s32 Scaler_event_proc(__s32 irq, void *parg)
 __s32 Scaler_event_proc(void *parg)
 #endif
 {
-    __u8 fe_intflags, be_intflags;
-    __u32 sel = (__u32)parg;
+        __u8 fe_intflags, be_intflags;
+        __u32 sel = (__u32)parg;
 
-    fe_intflags = DE_SCAL_QueryINT(sel);
-    be_intflags = DE_BE_QueryINT(sel);
-    DE_SCAL_ClearINT(sel,fe_intflags);
-    DE_BE_ClearINT(sel,be_intflags);
-    
-    //DE_INF("scaler %d interrupt, scal_int_status:0x%x!\n", sel, fe_intflags);
+        be_intflags = DE_BE_QueryINT(sel);
+        DE_BE_ClearINT(sel,be_intflags);
+        if(be_intflags & DE_IMG_REG_LOAD_FINISH)
+        {
+                LCD_line_event_proc(sel);
+        }
 
-    if(be_intflags & DE_IMG_REG_LOAD_FINISH)
-    {
-        LCD_line_event_proc(sel); 
-    }
-
-    if(fe_intflags & DE_WB_END_IE)
-    {        
-        DE_SCAL_DisableINT(sel,DE_FE_INTEN_ALL);
+        if(gdisp.scaler[sel].b_irq_enable)
+        {
+                fe_intflags = DE_SCAL_QueryINT(sel);
+                DE_SCAL_ClearINT(sel,fe_intflags);
+                if(fe_intflags & DE_WB_END_IE)
+                {
+                        DE_SCAL_DisableINT(sel,DE_FE_INTEN_ALL);
 #ifdef __LINUX_OSAL__
-        if(gdisp.scaler[sel].b_scaler_finished == 1 && (&gdisp.scaler[sel].scaler_queue != NULL))
-        {
-            gdisp.scaler[sel].b_scaler_finished = 2;
-            wake_up_interruptible(&(gdisp.scaler[sel].scaler_queue));
-        }
-        else
-        {
-            __wrn("not scaler %d begin in DRV_scaler_finish\n", sel);
-        }
+                        if(gdisp.scaler[sel].b_scaler_finished == 1 && (&gdisp.scaler[sel].scaler_queue != NULL))
+                        {
+                                gdisp.scaler[sel].b_scaler_finished = 2;
+                                wake_up_interruptible(&(gdisp.scaler[sel].scaler_queue));
+                        }
+                        else
+                        {
+                                __wrn("not scaler %d begin in DRV_scaler_finish\n", sel);
+                        }
 #endif
-    }
-
-    return OSAL_IRQ_RETURN;
+                }
+        }
+        return OSAL_IRQ_RETURN;
 }
 
 __s32 Scaler_Init(__u32 sel)
 {
-    scaler_clk_init(sel);    
-    DE_SCAL_EnableINT(sel,DE_WB_END_IE);
-    
-    if(sel == 0)
-    {
-        OSAL_RegISR(INTC_IRQNO_SCALER0,0,Scaler_event_proc, (void *)sel,0,0);
+        DE_INF("scaler %d Init\n", sel);
+        scaler_clk_init(sel);
+        DE_SCAL_EnableINT(sel,DE_WB_END_IE);
+
+        if(sel == 0)
+        {
+                OSAL_RegISR(INTC_IRQNO_SCALER0,0,Scaler_event_proc, (void *)sel,0,0);
 #ifndef __LINUX_OSAL__
-        OSAL_InterruptEnable(INTC_IRQNO_SCALER0);
+                OSAL_InterruptEnable(INTC_IRQNO_SCALER0);
 #endif
-    }
-    else if(sel == 1)
-    {
-        OSAL_RegISR(INTC_IRQNO_SCALER1,0,Scaler_event_proc, (void *)sel,0,0);
+        }
+        else if(sel == 1)
+        {
+                OSAL_RegISR(INTC_IRQNO_SCALER1,0,Scaler_event_proc, (void *)sel,0,0);
 #ifndef __LINUX_OSAL__
-        OSAL_InterruptEnable(INTC_IRQNO_SCALER1);
+                OSAL_InterruptEnable(INTC_IRQNO_SCALER1);
 #endif
-    }
+        }
    	return DIS_SUCCESS;
 }
 
 __s32 Scaler_Exit(__u32 sel)
 {
-    if(sel == 0)
-    {
-        OSAL_InterruptDisable(INTC_IRQNO_SCALER0);
-        OSAL_UnRegISR(INTC_IRQNO_SCALER0,Scaler_event_proc,(void*)sel);
-    }
-    else if(sel == 1)
-    {
-        OSAL_InterruptDisable(INTC_IRQNO_SCALER1);
-        OSAL_UnRegISR(INTC_IRQNO_SCALER1,Scaler_event_proc,(void*)sel);
-    }
+        DE_INF("scaler %d Exit\n", sel);
 
-    DE_SCAL_DisableINT(sel,DE_WB_END_IE);
-    DE_SCAL_Reset(sel);
-    DE_SCAL_Disable(sel);
-    scaler_clk_off(sel);
-    return DIS_SUCCESS;
+        if(sel == 0)
+        {
+                OSAL_InterruptDisable(INTC_IRQNO_SCALER0);
+                OSAL_UnRegISR(INTC_IRQNO_SCALER0,Scaler_event_proc,(void*)sel);
+        }
+        else if(sel == 1)
+        {
+                OSAL_InterruptDisable(INTC_IRQNO_SCALER1);
+                OSAL_UnRegISR(INTC_IRQNO_SCALER1,Scaler_event_proc,(void*)sel);
+        }
+
+        DE_SCAL_DisableINT(sel,DE_WB_END_IE);
+        DE_SCAL_Reset(sel);
+        DE_SCAL_Disable(sel);
+        scaler_clk_off(sel);
+
+        return DIS_SUCCESS;
 }
       
 __s32 Scaler_open(__u32 sel)
 {
-    DE_INF("scaler %d open\n", sel);
+        DE_INF("scaler %d open\n", sel);
 
-    scaler_clk_on(sel);
-    DE_SCAL_Reset(sel);
-    DE_SCAL_Enable(sel);
+        scaler_clk_on(sel);
+        DE_SCAL_Reset(sel);
+        DE_SCAL_Enable(sel);
 
-    return DIS_SUCCESS;
+        return DIS_SUCCESS;
 }
 
 __s32 Scaler_close(__u32 sel)
 {
-    DE_INF("scaler %d close\n", sel);
+        DE_INF("scaler %d close\n", sel);
 
-    DE_SCAL_Reset(sel);
-    DE_SCAL_Disable(sel);
-    scaler_clk_off(sel);
+        DE_SCAL_Reset(sel);
+        DE_SCAL_Disable(sel);
+        scaler_clk_off(sel);
 
-    memset(&gdisp.scaler[sel], 0, sizeof(__disp_scaler_t));
-    gdisp.scaler[sel].bright = 32;
-    gdisp.scaler[sel].contrast = 32;
-    gdisp.scaler[sel].saturation = 32;
-    gdisp.scaler[sel].hue = 32;
-    gdisp.scaler[sel].status &= SCALER_USED_MASK;
+        memset(&gdisp.scaler[sel], 0, sizeof(__disp_scaler_t));
+        gdisp.scaler[sel].bright = 32;
+        gdisp.scaler[sel].contrast = 32;
+        gdisp.scaler[sel].saturation = 32;
+        gdisp.scaler[sel].hue = 32;
+        gdisp.scaler[sel].status &= SCALER_USED_MASK;
 
-    return DIS_SUCCESS;
+        return DIS_SUCCESS;
 }
 
 __s32 Scaler_Request(__u32 sel)
@@ -426,12 +429,12 @@ __s32 Scaler_Set_Framebuffer(__u32 sel, __disp_fb_t *pfb)//keep the source windo
 	__scal_out_type_t out_type;
 	__scal_scan_mod_t in_scan;
 	__scal_scan_mod_t out_scan;
-    __disp_scaler_t * scaler;
-    __u32 screen_index;
-    __u32 cpu_sr;
+        __disp_scaler_t * scaler;
+        __u32 screen_index;
+        __u32 cpu_sr;
 
-    scaler = &(gdisp.scaler[sel]);
-    screen_index = gdisp.scaler[sel].screen_index;
+        scaler = &(gdisp.scaler[sel]);
+        screen_index = gdisp.scaler[sel].screen_index;
     
 	OSAL_IrqLock(&cpu_sr);
 	memcpy(&scaler->in_fb, pfb, sizeof(__disp_fb_t)); 
@@ -1344,8 +1347,10 @@ __s32 BSP_disp_capture_screen(__u32 sel, __disp_capture_screen_para_t * para)
         DE_SCAL_Input_Select(scaler_idx, 6 + sel);
         DE_BE_set_display_size(sel, para->screen_size.width, para->screen_size.height);
         DE_BE_Output_Select(sel, 6 + scaler_idx);
-        image_clk_on(sel);
+        image_clk_on(sel, 0);
+        image_clk_on(sel, 1);
         Image_open(sel);
+        DE_BE_EnableINT(sel, DE_IMG_REG_LOAD_FINISH);
         DE_BE_Cfg_Ready(sel);
     }
     else
@@ -1395,7 +1400,9 @@ __s32 BSP_disp_capture_screen(__u32 sel, __disp_capture_screen_para_t * para)
     if(BSP_disp_get_output_type(sel) == DISP_OUTPUT_TYPE_NONE)
     {
         Image_close(sel);
-        image_clk_off(sel);
+        DE_BE_DisableINT(sel, DE_IMG_REG_LOAD_FINISH);
+        image_clk_off(sel, 1);
+        image_clk_off(sel, 0);
     }
     DE_BE_Output_Select(sel, sel);
 

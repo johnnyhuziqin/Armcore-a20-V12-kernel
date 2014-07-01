@@ -22,10 +22,6 @@
 #include <mach/includes.h>
 #include "sunxi_physmem_i.h"
 
-#define	BUFFER_PADDR			SW_VE_MEM_BASE
-#define	BUFFER_VADDR			BUFFER_PADDR
-#define	BUFFER_SIZE			SW_VE_MEM_SIZE
-
 #define	MEMORY_GAP_MIN      0x10000
 
 #define IS_LIST_EMPTY(listh)            ((bool)((listh)->next == listh))
@@ -287,9 +283,15 @@ void sunxi_free(struct sunxi_mem_allocator *this, const u32 virtAddr, const u32 
 
 int __init sunxi_mem_allocator_init(void)
 {
-	u32 	buf_size = BUFFER_SIZE;
-	u32 	buf_vaddr = BUFFER_VADDR;
-	u32 	buf_paddr = BUFFER_PADDR;
+    struct __sun7i_reserved_addr reserved_addr;
+	u32 buf_size;
+	u32 buf_paddr;
+	u32 buf_vaddr;
+    
+    sun7i_get_reserved_addr(&reserved_addr);
+    buf_size = reserved_addr.size;
+    buf_paddr = reserved_addr.paddr;
+    buf_vaddr = buf_paddr;
 
 	g_allocator = kmalloc(sizeof(struct sunxi_mem_allocator), GFP_KERNEL);
 	if(NULL == g_allocator) {

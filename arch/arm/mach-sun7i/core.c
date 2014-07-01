@@ -47,10 +47,6 @@
 #include <mach/includes.h>
 #include <mach/timer.h>
 
-#include <linux/i2c/at24.h>
-#include <linux/i2c.h>
-
-
 #include "core.h"
 
 void sw_pdev_init(void);
@@ -87,6 +83,8 @@ static struct sys_timer sun7i_timer = {
 	.init		= sun7i_timer_init,
 };
 
+static int sun7i_mem_size = PLAT_MEM_SIZE;
+
 static void sun7i_fixup(struct tag *tags, char **from,
 			struct meminfo *meminfo)
 {
@@ -99,12 +97,13 @@ static void sun7i_fixup(struct tag *tags, char **from,
 					__func__,
 					t->u.mem.start,
 					t->u.mem.size >> 20);
-            if (t->u.mem.start + t->u.mem.size < HW_RESERVED_MEM_BASE + HW_RESERVED_MEM_SIZE)
+            if (t->u.mem.start + t->u.mem.size < SW_G2D_MEM_BASE + SW_G2D_MEM_SIZE)
             {
                 pr_debug("check!,reserve hw mem is : start:%x, size:%d\n",
-                        HW_RESERVED_MEM_BASE,
-                        HW_RESERVED_MEM_SIZE);
+                        SW_G2D_MEM_BASE,
+                        SW_G2D_MEM_SIZE);
             }
+            sun7i_mem_size = t->u.mem.size;
 			return;
 		}
 	}
@@ -112,7 +111,7 @@ static void sun7i_fixup(struct tag *tags, char **from,
 
 	meminfo->bank[0].start = PLAT_PHYS_OFFSET;
 	meminfo->bank[0].size = PLAT_MEM_SIZE;
-
+    sun7i_mem_size = PLAT_MEM_SIZE;
 	meminfo->nr_banks = 1;
 }
 
@@ -144,8 +143,43 @@ static void __init sun7i_reserve(void)
 	/*
 	 * reserve for DE and VE
 	 */
-	memblock_remove(HW_RESERVED_MEM_BASE, HW_RESERVED_MEM_SIZE);
+	if (sun7i_mem_size > 512 * 1024 *1024)
+	{
+        memblock_remove(HW_RESERVED_MEM_BASE, HW_RESERVED_MEM_SIZE_1G);
+        memblock_remove(SW_GPU_MEM_BASE, SW_GPU_MEM_SIZE_1G);
+	}
+    else
+    {
+        memblock_remove(HW_RESERVED_MEM_BASE, HW_RESERVED_MEM_SIZE_512M);
+        memblock_remove(SW_GPU_MEM_BASE, SW_GPU_MEM_SIZE_512M);
+    }
+    if (SW_G2D_MEM_SIZE > 0)
+    {
+        memblock_remove(SW_G2D_MEM_BASE, SW_G2D_MEM_SIZE);
+    }
 }
+
+
+void sun7i_get_gpu_addr(struct __sun7i_reserved_addr *gpu_addr)
+{        
+    if(gpu_addr)
+    {                
+        gpu_addr->paddr = SW_GPU_MEM_BASE;    
+        gpu_addr->size = (sun7i_mem_size > 512 * 1024 *1024)? SW_GPU_MEM_SIZE_1G:SW_GPU_MEM_SIZE_512M;
+    }
+}
+EXPORT_SYMBOL(sun7i_get_gpu_addr);
+
+void sun7i_get_reserved_addr(struct __sun7i_reserved_addr *reserved_addr)
+{        
+    if(reserved_addr)
+    {                
+        reserved_addr->paddr = HW_RESERVED_MEM_BASE;    
+        reserved_addr->size = (sun7i_mem_size > 512 * 1024 *1024)? HW_RESERVED_MEM_SIZE_1G:HW_RESERVED_MEM_SIZE_512M;
+    }
+}
+EXPORT_SYMBOL(sun7i_get_reserved_addr);
+
 
 static void sun7i_restart(char mode, const char *cmd)
 {
@@ -161,30 +195,11 @@ static void sun7i_restart(char mode, const char *cmd)
 	}
 }
 
-/*
- * I2C devices
- */
-static struct at24_platform_data at24c16 = {
-	.byte_len	= SZ_16K / 8,
-	.page_size	= 16,
-};
-
-static struct i2c_board_info sun7i_i2c_devs[] __initdata = {
-	{
-		I2C_BOARD_INFO("24c16", 0x50),
-		.platform_data = &at24c16,
-	},
-};
-
-
 static void __init sun7i_init(void)
 {
 	pr_info("%s: enter\n", __func__);
 	sw_pdev_init();
 	/* Register platform devices here!! */
-
-	i2c_register_board_info(1, sun7i_i2c_devs,
-				ARRAY_SIZE(sun7i_i2c_devs));
 }
 
 void __init sun7i_init_early(void)

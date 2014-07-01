@@ -97,7 +97,7 @@ typedef struct
         __u32                   image_output_type;//see macro definition IMAGE_OUTPUT_XXX above, it can be lcd only /lcd+scaler/ scaler only
         __u32                   out_scaler_index;
         __u32                   hdmi_index;//0: internal hdmi; 1:external hdmi(if exit)
-
+        __bool                  hdmi_hpd;//0:unplug;  1:plugin
         __bool                  b_out_interlace;
         __disp_output_type_t    output_type;//sw status
         __disp_vga_mode_t       vga_mode;
@@ -105,7 +105,7 @@ typedef struct
         __disp_tv_mode_t        hdmi_mode;
         __disp_tv_dac_source    dac_source[4];
         __bool                  hdmi_used;
-
+        __disp_out_csc_type_t   output_csc_type;
         __s32                   (*LCD_CPUIF_XY_Swap)(__s32 mode);
         void                    (*LCD_CPUIF_ISR)(void);
         __u32	                pll_use_status;	//lcdc0/lcdc1 using which video pll(0 or 1)
@@ -118,6 +118,7 @@ typedef struct
         __hdle                  gpio_hdl[6];
 
         __bool                  vsync_event_en;
+        __bool                  dvi_enable;
 }__disp_screen_t;
 
 typedef struct

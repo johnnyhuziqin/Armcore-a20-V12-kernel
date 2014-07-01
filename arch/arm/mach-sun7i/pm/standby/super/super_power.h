@@ -79,6 +79,7 @@ struct axp_info {
 
 extern __s32 mem_power_init(__u32 wakeup_src);
 extern __s32 mem_power_exit(__u32 wakeup_src);
+extern __s32 mem_power_is_pending(__u32 wakeup_src);
 extern __s32 mem_power_off(void);
 extern __s32 mem_power_off_nommu(void);
 

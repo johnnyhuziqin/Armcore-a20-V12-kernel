@@ -261,8 +261,105 @@ __s32 mem_power_init(__u32 wakeup_src)
 				return -1;
 			}
 	}
+
+	if(wakeup_src & AXP_WAKEUP_PIO0){
+        reg_val = 0xc2;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x90, &reg_val)){
+            return -1;
+        }
+	}
+    
+	if(wakeup_src & AXP_WAKEUP_PIO1){
+        reg_val = 0xc2;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x92, &reg_val)){
+            return -1;
+        }
+	}
 		
+    if(wakeup_src & AXP_WAKEUP_PIO2){
+        reg_val = 0xc2;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x93, &reg_val)){
+            return -1;
+        }
+    }
+    
+    if(wakeup_src & AXP_WAKEUP_PIO3){
+        reg_val = 0xc2;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x95, &reg_val)){
+            return -1;
+        }
+    }
+
+    if(wakeup_src & AXP_WAKEUP_PIO_ANY){
+        reg_val = 0x07;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x97, &reg_val)){
+            return -1;
+        }
+        
+        if(0 != twi_byte_rw_nommu(TWI_OP_RD, AXP_ADDR, 0x44, &reg_val)){
+            //print_call_info_nommu();
+            return -1;
+        }
+        reg_val |= 0x05;
+        if(twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, 0x44, &reg_val)){
+            return -1;
+        }
+    }
+    
 	return 0;
+}
+
+
+/*
+*********************************************************************************************************
+*                           mem_power_querry
+*
+* Description: check axp if irq pending is set.
+*
+* Arguments  : none;
+*
+* Returns    : 0: succeed;
+*			 -1: failed;
+*********************************************************************************************************
+*/
+__s32 mem_power_is_pending(__u32 wakeup_src)
+{
+    __u8 reg_val;
+    __u8 pio_pendding;
+    __u8 irq_stat_mask = 0;
+
+    if(wakeup_src & AXP_WAKEUP_PIO0){
+        irq_stat_mask |= 0x1;
+    }
+    
+    if(wakeup_src & AXP_WAKEUP_PIO1){
+        irq_stat_mask |= 0x2;
+    }
+        
+    if(wakeup_src & AXP_WAKEUP_PIO2){
+        irq_stat_mask |= 0x4;
+    }
+    
+    if(wakeup_src & AXP_WAKEUP_PIO3){
+        irq_stat_mask |= 0x8;
+    }
+
+    reg_val = 0;
+    twi_byte_rw_nommu(TWI_OP_RD, AXP_ADDR, AXP20_IRQ5, &reg_val);
+    
+    pio_pendding = (reg_val & irq_stat_mask);
+    if (pio_pendding != 0)  /*axp pio pending is set*/
+    {
+        printk("AXP20_IRQ5: %x\n", pio_pendding);
+        twi_byte_rw_nommu(TWI_OP_WR, AXP_ADDR, AXP20_IRQ5, &pio_pendding);
+    }
+    
+    if ((reg_val & 0x60) != 0)      /*power key up/down*/
+    {
+        printk("AXP20_IRQ5: %x\n",reg_val);
+        return -1;
+    }
+    return 0;
 }
 
 /*
@@ -348,7 +445,6 @@ __s32 mem_power_exit(__u32 wakeup_src)
 			}
 
 	}
-	
 	return 0;
 }
 
@@ -482,6 +578,4 @@ __s32 mem_power_off_nommu(void)
 	
 	return -5;
 }
-
-
 

@@ -690,7 +690,7 @@ long cedardev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	{
 		struct cedarv_env_infomation env_info;
 		env_info.phymem_start = (unsigned int)phys_to_virt(SW_VE_MEM_BASE); // (0x4d000000);
-		env_info.phymem_total_size = SW_VE_MEM_SIZE; // 0x05000000;
+		env_info.phymem_total_size = 0x05000000;
 		env_info.address_macc = (unsigned int)cedar_devp->iomap_addrs.regs_macc;
 		if(copy_to_user((char *)arg, &env_info, sizeof(struct cedarv_env_infomation)))
 			return -EFAULT;

@@ -33,7 +33,6 @@ typedef enum
         SYS_CLK_PLL5P,
         SYS_CLK_PLL6,
         SYS_CLK_PLL6M,
-        SYS_CLK_PLL6X2,
         SYS_CLK_PLL7X2,
 
         MOD_CLK_DEBE0,

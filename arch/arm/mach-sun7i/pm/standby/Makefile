@@ -96,33 +96,33 @@ CC = $(CROSS_COMPILE)gcc
 
 #CFLAGS = -g -c -nostdlib -march=armv7-a -marm -fno-unwind-tables -fno-asynchronous-unwind-tables -mlittle-endian  --min_array_alignment=4 --no_unaligned_access -O2 
 CFLAGS = -g -c -nostdlib -march=armv7-a -marm -D__STANDBY_MODULE__ -fno-unwind-tables -fno-asynchronous-unwind-tables -mlittle-endian -O0 --min_array_alignment=4 --no_unaligned_access
-
+CFLAGS_DRAM_VADDR = -D DRAM_USE_VA_ADDR
 all: standby suspend resume1 resume0
 
 standby:
 	rm -rf *.o ../*.o dram/*.o
 
-	$(CC) $(INCLUDE) $(CFLAGS) common.c           -o common.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby.c          -o standby.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_clock.c    -o standby_clock.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_ir.c       -o standby_ir.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_key.c      -o standby_key.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_power.c    -o standby_power.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_tmr.c      -o standby_tmr.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_twi.c      -o standby_twi.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_usb.c      -o standby_usb.o
-	$(CC) $(INCLUDE) $(CFLAGS) standby_delay.S    -o standby_delay.o
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_delay.S             -o ./../mem_delay.o
-	$(CC) $(INCLUDE) $(CFLAGS) ./../pm_debug.c    			-o ./../pm_debug.o 
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_timing.c    		-o ./../mem_timing.o 
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_mmu_pc_asm.S               -o ./../mem_mmu_pc_asm.o
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_divlib.S    -o 		./../mem_divlib.o 
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_divlibc.c    -o 		./../mem_divlibc.o 
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_int.c    -o 		./../mem_int.o
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_printk.c    -o 		./../mem_printk.o 
-	$(CC) $(INCLUDE) $(CFLAGS) ./../mem_serial.c    -o 		./../mem_serial.o 
-	$(CC) $(INCLUDE) $(CFLAGS) dram/dram.c        -o dram/dram.o
-	$(CC) $(INCLUDE) $(CFLAGS) dram/dram_init.c   -o dram/dram_init.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) common.c           -o common.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby.c          -o standby.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_clock.c    -o standby_clock.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_ir.c       -o standby_ir.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_key.c      -o standby_key.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_power.c    -o standby_power.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_tmr.c      -o standby_tmr.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_twi.c      -o standby_twi.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_usb.c      -o standby_usb.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) standby_delay.S    -o standby_delay.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_delay.S             -o ./../mem_delay.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../pm_debug.c    			-o ./../pm_debug.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_timing.c    		-o ./../mem_timing.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_mmu_pc_asm.S               -o ./../mem_mmu_pc_asm.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_divlib.S    -o 		./../mem_divlib.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_divlibc.c    -o 		./../mem_divlibc.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_int.c    -o 		./../mem_int.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_printk.c    -o 		./../mem_printk.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) ./../mem_serial.c    -o 		./../mem_serial.o 
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) dram/dram.c        -o dram/dram.o
+	$(CC) $(INCLUDE) $(CFLAGS) $(CFLAGS_DRAM_VADDR) dram/dram_init.c   -o dram/dram_init.o
 	$(CROSS_COMPILE)ld -T $(STANDBY_LD_FILE)  -EL  $(STANDBY_OBJ) -o $(STANDBY_OUPUTFILE).elf  -Map $(STANDBY_OUPUTFILE).map
 	$(CROSS_COMPILE)objdump -D $(STANDBY_OUPUTFILE).elf > $(STANDBY_OUPUTFILE).lst
 	$(CROSS_COMPILE)objcopy -O binary $(STANDBY_OUPUTFILE).elf $(STANDBY_OUPUTFILE).bin

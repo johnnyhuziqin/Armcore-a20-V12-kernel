@@ -51,6 +51,7 @@ typedef struct
 #ifdef __LINUX_OSAL__
     wait_queue_head_t       scaler_queue;
     __bool                  b_scaler_finished;
+    __bool                  b_irq_enable;
 #endif
 }__disp_scaler_t;
 

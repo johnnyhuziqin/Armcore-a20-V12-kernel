@@ -29,18 +29,24 @@ __s32 BSP_disp_vga_open(__u32 sel)
 
         	vga_mode = gdisp.screen[sel].vga_mode;
         	
-        	lcdc_clk_on(sel);
-        	image_clk_on(sel);
+                lcdc_clk_on(sel, 1, 0);
+                lcdc_clk_on(sel, 1, 1);
+                Disp_lcdc_reg_isr(sel);
+                LCDC_init(sel);
+                image_clk_on(sel, 0);
+                image_clk_on(sel, 1);
                 Image_open(sel);//set image normal channel start bit , because every de_clk_off( )will reset this bit
+                DE_BE_EnableINT(sel, DE_IMG_REG_LOAD_FINISH);
         	tve_clk_on(sel);
         	disp_clk_cfg(sel,DISP_OUTPUT_TYPE_VGA, vga_mode);
         	Disp_lcdc_pin_cfg(sel, DISP_OUTPUT_TYPE_VGA, 1);
 
-                BSP_disp_set_output_csc(sel, DISP_OUTPUT_TYPE_VGA);
-                DE_BE_set_display_size(sel, vga_mode_to_width(vga_mode), vga_mode_to_height(vga_mode));
-                DE_BE_Output_Select(sel, sel);
-        	tcon1_set_vga_mode(sel,vga_mode);
-                TVE_set_vga_mode(sel);
+		gdisp.screen[sel].output_csc_type = DISP_OUT_CSC_TYPE_VGA;
+		BSP_disp_set_output_csc(sel, gdisp.screen[sel].output_csc_type);
+		DE_BE_set_display_size(sel, vga_mode_to_width(vga_mode), vga_mode_to_height(vga_mode));
+		DE_BE_Output_Select(sel, sel);
+		tcon1_set_vga_mode(sel,vga_mode);
+		TVE_set_vga_mode(sel);
 
         	Disp_TVEC_Open(sel);
         	tcon1_open(sel);
@@ -72,12 +78,9 @@ __s32 BSP_disp_vga_close(__u32 sel)
 {
 	if(gdisp.screen[sel].status & VGA_ON)
 	{    
-                Image_close(sel);
-            	tcon1_close(sel);
-            	//Disp_TVEC_Close(sel);
-            	
-            	tve_clk_off(sel);
-            	image_clk_off(sel);
+                tcon1_close(sel);
+                tve_clk_off(sel);
+                image_clk_off(sel, 1);
             	lcdc_clk_off(sel);
             	Disp_lcdc_pin_cfg(sel, DISP_OUTPUT_TYPE_VGA, 0);
 

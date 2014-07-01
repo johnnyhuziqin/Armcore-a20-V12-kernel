@@ -16,7 +16,11 @@
 #include "../pm.h"
 #include "../mem_int.h"
 
+#ifdef DRAM_USE_VA_ADDR
+#define DRAMC_IO_BASE       SW_VA_DRAM_IO_BASE
+#else
 #define DRAMC_IO_BASE       SW_PA_DRAM_IO_BASE
+#endif
 #define DRAMC_MEM_SIZE      0x400
 
 #define SDR_CCR				(DRAMC_IO_BASE + 0x00)
@@ -62,7 +66,11 @@
 #define SDR_HPCR			(DRAMC_IO_BASE + 0x250)
 #define SDR_SCSR			(DRAMC_IO_BASE + 0x2e0)
 
+#ifdef DRAM_USE_VA_ADDR
+#define RTC_BASE			SW_VA_TIMERC_IO_BASE
+#else
 #define RTC_BASE			SW_PA_TIMERC_IO_BASE
+#endif
 #define SDR_GP_REG0				(RTC_BASE + 0x120)
 #define SDR_GP_REG1				(RTC_BASE + 0x124)
 #define SDR_GP_REG2				(RTC_BASE + 0x128)
@@ -73,7 +81,12 @@
 
 
 //CCM register for dram
+#ifdef DRAM_USE_VA_ADDR
+#define DRAM_CCM_BASE       SW_VA_CCM_IO_BASE
+#else
 #define DRAM_CCM_BASE       SW_PA_CCM_IO_BASE
+#endif
+
 #define DRAM_CCM_MEMSIZE    0x400
 
 #define DRAM_CCM_SDRAM_PLL_REG    (DRAM_CCM_BASE + 0x20)
@@ -83,7 +96,11 @@
 #define DRAM_CCM_MUS_CLK_REG      (DRAM_CCM_BASE + 0x15c)
 
 //TIMER register for system
+#ifdef DRAM_USE_VA_ADDR
+#define DRAM_TIMER_BASE     SW_VA_TIMERC_IO_BASE
+#else
 #define DRAM_TIMER_BASE     SW_PA_TIMERC_IO_BASE
+#endif
 #define TIMER_CPU_CFG_REG   (DRAM_TIMER_BASE + 0x13c)
 
 

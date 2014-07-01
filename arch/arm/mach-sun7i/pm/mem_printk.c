@@ -259,6 +259,7 @@ char *utoa(unsigned int value, char *string, int radix)
 *********************************************************************************************************
 */
 char debugger_buffer[DEBUG_BUFFER_SIZE];
+int dram_suspend_flag = 0; 
 __s32 printk(const char *format, ...)
 {
 	va_list args;
@@ -270,6 +271,10 @@ __s32 printk(const char *format, ...)
 	
 	//dump current timestemp
 	//print_current_time();
+	if (dram_suspend_flag)
+	{
+        return 0;
+	}
 	
 	pdest = debugger_buffer;
 	va_start(args, format);

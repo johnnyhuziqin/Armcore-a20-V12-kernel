@@ -39,17 +39,17 @@ typedef enum     		/*internal layer framebuffer format enum definition*/
 
 typedef enum
 {
-  DE_H32_V32_8BPP,
-  DE_H64_V64_2BPP,
-  DE_H64_V32_4BPP,
-  DE_H32_V64_4BPP
+        DE_H32_V32_8BPP,
+        DE_H64_V64_2BPP,
+        DE_H64_V32_4BPP,
+        DE_H32_V64_4BPP
 }de_hwc_mode_e;
 
 
 typedef enum
 {
-   DE_N32PIXELS=0,
-   DE_N64PIXELS
+        DE_N32PIXELS=0,
+        DE_N64PIXELS
 }de_pixels_num_t;
 
 
@@ -110,12 +110,12 @@ typedef enum __SCAL_3D_INMODE
 
 typedef enum __SCAL_3D_OUTMODE
 {
-	DE_SCAL_3DOUT_CI_1=0,    //for lcd
+	DE_SCAL_3DOUT_CI_1=0,           //for lcd
 	DE_SCAL_3DOUT_CI_2,
 	DE_SCAL_3DOUT_CI_3,
 	DE_SCAL_3DOUT_CI_4,
 	DE_SCAL_3DOUT_LIRGB,
-	DE_SCAL_3DOUT_HDMI_FPP,   //for hdmi
+	DE_SCAL_3DOUT_HDMI_FPP,         //for hdmi
 	DE_SCAL_3DOUT_HDMI_FPI,
 	DE_SCAL_3DOUT_HDMI_TB,
 	DE_SCAL_3DOUT_HDMI_FA,
@@ -126,104 +126,103 @@ typedef enum __SCAL_3D_OUTMODE
 
 typedef struct layer_input_src
 {
-   __u8     format;
-   __u8     pixseq;
-   __u8     br_swap;
-   __u32    fb_width;
-   __u32    fb_addr;
-   __u32    offset_x;
-   __u32    offset_y;
-
-   __bool yuv_ch;
+        __u8            format;
+        __u8            pixseq;
+        __u8            br_swap;
+        __u32           fb_width;
+        __u32           fb_addr;
+        __u32           offset_x;
+        __u32           offset_y;
+        __bool          yuv_ch;
 }layer_src_t;
 
 typedef struct dlcdp_src         /*direct lcd pipe input source definition */
 {
-   __u8     format;
-   __u8     pixseq;
-   __u32    fb_width;
-   __u32    fb_addr;
-   __u32    offset_x;
-   __u32    offset_y;
+        __u8            format;
+        __u8            pixseq;
+        __u32           fb_width;
+        __u32           fb_addr;
+        __u32           offset_x;
+        __u32           offset_y;
 }de_dlcdp_src_t;
 
 typedef struct hwc_src
 {
-    __u8    mode;
-    __u32   paddr;
+        __u8            mode;
+        __u32           paddr;
 }de_hwc_src_t;
 
 typedef struct yuv_ch_src
 {
-   __u8     format;
-   __u8     mode;
-   __u8     pixseq;
-   __u32    ch0_base;	//in bits
-   __u32    ch1_base;	//in bits
-   __u32    ch2_base;	//in bits
-   __u32    line_width;	//in bits
-   __u32    offset_x;
-   __u32    offset_y;
-   __u8     cs_mode;    //0:DISP_BT601; 1:DISP_BT709; 2:DISP_YCC; 3:DISP_VXYCC
+        __u8            format;
+        __u8            mode;
+        __u8            pixseq;
+        __u32           ch0_base;	//in bits
+        __u32           ch1_base;	//in bits
+        __u32           ch2_base;	//in bits
+        __u32           line_width;	//in bits
+        __u32           offset_x;
+        __u32           offset_y;
+        __u8            cs_mode;        //0:DISP_BT601; 1:DISP_BT709; 2:DISP_YCC; 3:DISP_VXYCC
 }de_yuv_ch_src_t;
 
 typedef struct sprite_src
 {
-	__u8    pixel_seq;//0,1
-	__u8    format;//0:32bpp; 1:8bpp
-   __u32    offset_x;
-   __u32    offset_y;
-   __u32    fb_addr;
-   __u32    fb_width;
+        __u8            pixel_seq;      //0,1
+        __u8            format;         //0:32bpp; 1:8bpp
+        __u32           offset_x;
+        __u32           offset_y;
+        __u32           fb_addr;
+        __u32           fb_width;
 }de_sprite_src_t;
 
 
 typedef struct __SCAL_SRC_TYPE
 {
-    __u8    sample_method; //for yuv420, 0: uv_hphase=-0.25, uv_vphase=-0.25; other : uv_hphase = 0, uv_vphase = -0.25
-    __u8    byte_seq;  //0:byte0,byte1, byte2, byte3; 1: byte3, byte2, byte1, byte0
-    __u8    mod;       //0:plannar; 1: interleaved; 2: plannar uv combined; 4: plannar mb; 6: uv combined mb
-    __u8    fmt;       //0:yuv444; 1: yuv422; 2: yuv420; 3:yuv411; 4: csi rgb; 5:rgb888
-    __u8    ps;        //
+        __u8            sample_method;  //for yuv420, 0: uv_hphase=-0.25, uv_vphase=-0.25; other : uv_hphase = 0, uv_vphase = -0.25
+        __u8            byte_seq;       //0:byte0,byte1, byte2, byte3; 1: byte3, byte2, byte1, byte0
+        __u8            mod;            //0:plannar; 1: interleaved; 2: plannar uv combined; 4: plannar mb; 6: uv combined mb
+        __u8            fmt;            //0:yuv444; 1: yuv422; 2: yuv420; 3:yuv411; 4: csi rgb; 5:rgb888
+        __u8            ps;             //
 }__scal_src_type_t;
 
 typedef struct __SCAL_OUT_TYPE
 {
-    __u8    byte_seq;  //0:byte0,byte1, byte2, byte3; 1: byte3, byte2, byte1, byte0
-    __u8    fmt;       //0:plannar rgb; 1: argb(byte0,byte1, byte2, byte3); 2:bgra; 4:yuv444; 5:yuv420; 6:yuv422; 7:yuv411
+        __u8            byte_seq;       //0:byte0,byte1, byte2, byte3; 1: byte3, byte2, byte1, byte0
+        __u8            fmt;            //0:plannar rgb; 1: argb(byte0,byte1, byte2, byte3); 2:bgra; 4:yuv444; 5:yuv420; 6:yuv422; 7:yuv411
 }__scal_out_type_t;
 
 typedef struct __SCAL_SRC_SIZE
 {
-    __u32   src_width;
-	__u32   src_height;
-    __u32   x_off;
-    __u32   y_off;
-    __u32   scal_width;
-    __u32   scal_height;
+        __u32           src_width;
+        __u32           src_height;
+        __u32           x_off;
+        __u32           y_off;
+        __u32           scal_width;
+        __u32           scal_height;
 }__scal_src_size_t;
 
 typedef struct __SCAL_OUT_SIZE
 {
-    __u32   width;
-    __u32   height;  //when ouput interlace enable,  the height is the 2x height of scale, for example, ouput is 480i, this value is 480
-    __u32   x_off;
-    __u32   y_off;
-    __u32   fb_width;
-    __u32   fb_height;
+        __u32           width;
+        __u32           height;         //when ouput interlace enable,  the height is the 2x height of scale, for example, ouput is 480i, this value is 480
+        __u32           x_off;
+        __u32           y_off;
+        __u32           fb_width;
+        __u32           fb_height;
 }__scal_out_size_t;
 
 typedef struct _SCAL_BUF_ADDR
 {
-    __u32   ch0_addr;   //
-    __u32   ch1_addr;
-    __u32   ch2_addr;
+        __u32           ch0_addr;
+        __u32           ch1_addr;
+        __u32           ch2_addr;
 }__scal_buf_addr_t;
 
 typedef struct _SCAL_SCAN_MOD
 {
-    __u8    field;    //0:frame scan; 1:field scan
-    __u8    bottom;      //0:top field; 1:bottom field
+        __u8            field;          //0:frame scan; 1:field scan
+        __u8            bottom;         //0:top field; 1:bottom field
 }__scal_scan_mod_t;
 
 
@@ -240,8 +239,11 @@ __s32 DE_SCAL_Set_Scaling_Factor(__u8 sel, __scal_scan_mod_t *in_scan, __scal_sr
                                  __scal_src_type_t *in_type, __scal_scan_mod_t *out_scan, 
                                  __scal_out_size_t *out_size, __scal_out_type_t *out_type);
 __s32 DE_SCAL_Set_Scaling_Coef(__u8 sel, __scal_scan_mod_t *in_scan, __scal_src_size_t *in_size,
-                               __scal_src_type_t *in_type, __scal_scan_mod_t *out_scan, 
-                               __scal_out_size_t *out_size, __scal_out_type_t *out_type, __u8 smth_mode);  
+                               __scal_src_type_t *in_type, __scal_scan_mod_t *out_scan,
+                               __scal_out_size_t *out_size, __scal_out_type_t *out_type, __u8 smth_mode);
+__s32 DE_SCAL_Set_Scaling_Coef_for_video(__u8 sel, __scal_scan_mod_t *in_scan, __scal_src_size_t *in_size,
+                               __scal_src_type_t *in_type, __scal_scan_mod_t *out_scan,
+                               __scal_out_size_t *out_size, __scal_out_type_t *out_type, __u32 smth_mode);
 __s32 DE_SCAL_Set_CSC_Coef(__u8 sel, __u8 in_csc_mode, __u8 out_csc_mode, __u8 incs, __u8 outcs, __u32  in_br_swap, __u32 out_br_swap);
 __s32 DE_SCAL_Set_Out_Format(__u8 sel, __scal_out_type_t *out_type);
 __s32 DE_SCAL_Set_Out_Size(__u8 sel, __scal_scan_mod_t *out_scan, __scal_out_type_t *out_type, __scal_out_size_t *out_size);

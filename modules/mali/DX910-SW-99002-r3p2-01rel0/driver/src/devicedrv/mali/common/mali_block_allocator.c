@@ -301,7 +301,7 @@ static mali_physical_memory_allocation_result block_allocator_allocate_page_tabl
 
 		phys = get_phys(info, alloc); /* Does not modify info or alloc */
 		size = MALI_BLOCK_SIZE; /* Must be multiple of MALI_MMU_PAGE_SIZE */
-		virt = _mali_osk_mem_mapioregion( phys, size, "Mali block allocator page tables" );
+		virt = _mali_osk_mem_mapioregion( phys + info->cpu_usage_adjust, size, "Mali block allocator page tables" );
 
 		/* Failure of _mali_osk_mem_mapioregion will result in MALI_MEM_ALLOC_INTERNAL_FAILURE,
 		 * because it's unlikely another allocator will be able to map in. */

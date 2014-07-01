@@ -651,8 +651,11 @@ static int sw_ehci_hcd_suspend(struct device *dev)
 
 	spin_unlock_irqrestore(&ehci->lock, flags);
 
-	sw_stop_ehci(sw_ehci);
-
+	//sw_stop_ehci(sw_ehci);
+    sw_ehci_port_configure(sw_ehci, 0);
+	sw_ehci->usb_passby(sw_ehci, 0);
+	close_ehci_clock(sw_ehci);
+	
 	return 0;
 }
 
@@ -710,8 +713,11 @@ static int sw_ehci_hcd_resume(struct device *dev)
 
  	DMSG_INFO("[%s]: sw_ehci_hcd_resume\n", sw_ehci->hci_name);
 
-	sw_start_ehci(sw_ehci);
-
+	//sw_start_ehci(sw_ehci);
+    open_ehci_clock(sw_ehci); 
+	sw_ehci->usb_passby(sw_ehci, 1);	
+	sw_ehci_port_configure(sw_ehci, 1);
+	
 	/* Mark hardware accessible again as we are out of D3 state by now */
 	set_bit(HCD_FLAG_HW_ACCESSIBLE, &hcd->flags);
 
@@ -747,6 +753,8 @@ static int sw_ehci_hcd_resume(struct device *dev)
 	ehci_work(ehci);
 	spin_unlock_irq(&ehci->lock);
 
+    ehci->command &= ~(CMD_ASE | CMD_IAAD | CMD_PSE);
+    ehci->command |= CMD_RUN;
 	ehci_writel(ehci, ehci->command, &ehci->regs->command);
 	ehci_writel(ehci, FLAG_CF, &ehci->regs->configured_flag);
 	ehci_readl(ehci, &ehci->regs->command);	/* unblock posted writes */

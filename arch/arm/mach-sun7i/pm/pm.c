@@ -597,7 +597,7 @@ mem_enter:
 #if 1
     /* config system wakeup evetn type */
     if(PM_SUSPEND_MEM == state || PM_SUSPEND_STANDBY == state){
-        mem_para_info.axp_event = AXP_MEM_WAKEUP;
+        mem_para_info.axp_event = AXP_MEM_WAKEUP | AXP_WAKEUP_PIO_ANY;
     }else if(PM_SUSPEND_BOOTFAST == state){
         mem_para_info.axp_event = AXP_BOOTFAST_WAKEUP;
     }
@@ -674,11 +674,11 @@ static int aw_pm_enter(suspend_state_t state)
         }else if(PM_SUSPEND_BOOTFAST == state){
             standby_info.standby_para.axp_src = AXP_BOOTFAST_WAKEUP;
         }
-        standby_info.standby_para.event_enable = (SUSPEND_WAKEUP_SRC_EXINT | SUSPEND_WAKEUP_SRC_ALARM);
+        standby_info.standby_para.event_enable = (SUSPEND_WAKEUP_SRC_EXINT | SUSPEND_WAKEUP_SRC_ALARM | SUSPEND_WAKEUP_SRC_IR);
 
         if (standby_timeout != 0)
         {
-            standby_info.standby_para.event_enable = (SUSPEND_WAKEUP_SRC_EXINT | SUSPEND_WAKEUP_SRC_ALARM | SUSPEND_WAKEUP_SRC_TIMEOFF);
+            standby_info.standby_para.event_enable |= (SUSPEND_WAKEUP_SRC_TIMEOFF);
             standby_info.standby_para.time_off = standby_timeout;
         }
         /* goto sram and run */
@@ -775,6 +775,7 @@ void aw_pm_end(void)
             restore_perfcounter();
     #endif
 #endif
+    pm_disable_watchdog(dogMode);
     if (backup_max_freq != 0 && backup_min_freq != 0)
     {
         policy = cpufreq_cpu_get(0);
@@ -789,7 +790,6 @@ void aw_pm_end(void)
         cpufreq_cpu_put(policy);
         cpufreq_update_policy(0);
     }
-    pm_disable_watchdog(dogMode);
     
     if(unlikely(debug_mask&PM_STANDBY_PRINT_REG)){
         printk("after dev suspend, line:%d\n", __LINE__);

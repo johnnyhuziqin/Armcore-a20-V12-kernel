@@ -2,6 +2,8 @@
 #include "camera_detector.h"
 
 __camera_detector_t camera_detector[1];
+extern  void camera_stby_on_sensor(__u32 list_index, __camera_info_t *camera_info);
+
 
 __bool camera_sub_name_exist(char *main_name, char *sub_name);
 
@@ -251,7 +253,7 @@ static __s32 camera_get_para(__camera_detector_t *camera_detector,
                                 "please add csi_facing_b in the [csi0_para]!! \n");
                 }
 
-        camera_get_sysconfig(main_name, "csi_reset_b",
+	 camera_get_sysconfig(main_name, "csi_reset_b",
                                 (__s32 *)camera_detector->camera[camera_index].reset_pin, 
                                 pin_struct_size);
         camera_get_sysconfig(main_name, "csi_power_en_b",
@@ -281,7 +283,7 @@ static __s32 camera_get_para(__camera_detector_t *camera_detector,
                 if (ret < 0) {
                     detect_print("if you want to use camera detector, "
                         "please add csi_facing in the [csi0_para]!! \n");
-                }
+                }		
 
                 camera_get_sysconfig(main_name, "csi_reset",
                                         (__s32 *)camera_detector->camera[camera_index].reset_pin, 
@@ -463,61 +465,35 @@ static __s32 camera_diff_i2c_id_detect(__camera_detector_t *camera_detector,
 static __s32 camera_same_i2c_id_detect(__camera_detector_t *camera_detector, 
                                                   __camera_list_t *camera_list,
                                                   __u32 camera_list_size)
-{
-        __u32 i, j, reverse_i;
+{	
+        __u32 i, j;
+	 __u32 camera_detected = 0;
         __s32 ret = 0;
-        __s32 camera_index[2][2] = {{-1, -1}, {-1, -1}};
-        __u32 camera0_index, camera1_index;
-        __u32 scan_cnt[2] = {0, 0};
-        __u32 scan_index;
 
         detect_print("camera_same_i2c_id_detect!!\n");
-    
+
         for (i = 0; i < camera_detector->num; i++) {
                 for (j = 0; j < camera_list_size; j++) {
                     if (camera_list[j].need_detect) {
+						
+			    camera_stby_on_sensor(j,&camera_detector->camera[0]);
+			    camera_stby_on_sensor(j,&camera_detector->camera[1]);
                         camera_list[j].pwr_on(j, &camera_detector->camera[i]);
                         ret = camera_list[j].detect(j, camera_detector->camera[i].i2c_adap);
                         if (ret == 0) {
-                            camera_index[i][scan_cnt[i]] = j;
-                            scan_cnt[i]++;
-                            camera_list[j].pwr_off(j, &camera_detector->camera[i]);
+				//camera_list[j].need_detect=false;
+				camera_detected++;
+				camera_list[j].pwr_off(j, &camera_detector->camera[i]);
+				strcpy(camera_detector->camera[i].name, camera_list[j].name);
+				camera_detector->camera[i].i2c_addr = camera_list[j].i2c_addr;
+				 break;
+
+				
                         }
                     }
                 }
         }
-		
-        if ((scan_cnt[0] == 2) || (scan_cnt[1] == 2)) {
-                scan_index = (scan_cnt[0] == 2) ? 0 : 1;
-                for (i = 0; i < 2; i++) {
-                        reverse_i = (i == 0) ? 1 : 0;
-                        camera0_index = camera_index[scan_index][i];
-                        camera1_index = camera_index[scan_index][reverse_i];
-                        camera_list[camera1_index].pwr_off(camera1_index, &camera_detector->camera[reverse_i]);
-                        camera_list[camera0_index].pwr_on(camera0_index, &camera_detector->camera[i]);
-                        ret = camera_list[camera0_index].detect(camera0_index, camera_detector->camera[i].i2c_adap);
-                        if (ret == 0) {
-                                strcpy(camera_detector->camera[i].name, camera_list[camera0_index].name);
-                                camera_detector->camera[i].i2c_addr = camera_list[camera0_index].i2c_addr;
-                                strcpy(camera_detector->camera[reverse_i].name, camera_list[camera1_index].name);
-                                camera_detector->camera[reverse_i].i2c_addr = camera_list[camera1_index].i2c_addr;
-                                camera_list[camera0_index].pwr_off(camera0_index, &camera_detector->camera[i]);
-                                if (i == 0) {
-                                    break;
-                                }
-                        }
-                }
-        }
-        else if ((scan_cnt[0] == scan_cnt[1]) 
-              && (scan_cnt[0] == 1)) {
-                camera0_index = camera_index[0][0];
-                camera1_index = camera_index[1][0];
-                strcpy(camera_detector->camera[0].name, camera_list[camera0_index].name);
-                strcpy(camera_detector->camera[1].name, camera_list[camera1_index].name);
-                camera_detector->camera[0].i2c_addr = camera_list[camera0_index].i2c_addr;
-                camera_detector->camera[1].i2c_addr = camera_list[camera1_index].i2c_addr;
-        }
-        else {
+        if (camera_detector->num != camera_detected)  {
                 camera_err("detect camera fail in func: camera_same_i2c_id_detect !!\n");
         
                 return -EDETECTFAIL;
@@ -716,7 +692,7 @@ static int __init camera_detector_init(void) {
                 camera_err("camera_get_board_info fail !!\n");
                 goto exit;
         }
-
+		
         camera_list_size = sizeof(camera_list) / sizeof(__camera_list_t);
         camera_init_module_list(camera_list_size);
 

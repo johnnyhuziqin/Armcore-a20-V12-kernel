@@ -3261,7 +3261,7 @@ void sw_hcd_h_disable(struct usb_hcd *hcd, struct usb_host_endpoint *hep)
 		urb = next_urb(qh);
 		if(urb == NULL){
 			DMSG_PANIC("ERR: sw_hcd_h_disable, urb is NULL\n");
-			return ;
+			goto exit;
 		}
 
 		/* make software (then hardware) stop ASAP */
@@ -3279,7 +3279,7 @@ void sw_hcd_h_disable(struct usb_hcd *hcd, struct usb_host_endpoint *hep)
 			urb = next_urb(qh);
 			if(urb == NULL){
 				DMSG_PANIC("ERR: sw_hcd_h_disable, urb is NULL\n");
-				return ;
+				goto exit;
 			}
 
 			urb->status = -ESHUTDOWN;

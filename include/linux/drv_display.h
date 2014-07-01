@@ -297,6 +297,14 @@ typedef enum
         DISP_ENHANCE_MODE_SCENERY   = 0xa,
 }__disp_enhance_mode_t;
 
+typedef enum
+{
+        DISP_OUT_CSC_TYPE_LCD        = 0,
+        DISP_OUT_CSC_TYPE_TV         = 1,
+        DISP_OUT_CSC_TYPE_HDMI_YUV   = 2,
+        DISP_OUT_CSC_TYPE_VGA        = 3,
+        DISP_OUT_CSC_TYPE_HDMI_RGB   = 4,
+}__disp_out_csc_type_t;
 
 typedef enum//only for debug!!!
 {
@@ -439,6 +447,7 @@ typedef struct
 	__bool                  b_trd_src; //if 3d source, used for scaler mode layer
 	__disp_3d_src_mode_t    trd_mode; //source 3d mode, used for scaler mode layer
 	__u32                   trd_right_addr[3];//used when in frame packing 3d mode
+        __bool                  pre_multiply; //TRUE: pre-multiply fb
 }__disp_fb_t;
 
 typedef struct
@@ -521,6 +530,9 @@ typedef struct
 	__s32 (*hdmi_mode_support)(__disp_tv_mode_t mode);
 	__s32 (*hdmi_get_HPD_status)(void);
 	__s32 (*hdmi_set_pll)(__u32 pll, __u32 clk);
+        __s32 (*hdmi_dvi_enable)(__u32 mode);
+        __s32 (*hdmi_dvi_support)(void);
+        __s32 (*hdmi_get_input_csc)(void);
 	__s32 (*hdmi_suspend)(void);
 	__s32 (*hdmi_resume)(void);
 }__disp_hdmi_func;
@@ -529,6 +541,8 @@ typedef struct
 {
 	__u32	lcd_x;
 	__u32   lcd_y;
+        __u32   lcd_width; //width of lcd in mm
+        __u32   lcd_height;//height of lcd in mm
 	__u32   lcd_dclk_freq;
 	__u32   lcd_pwm_not_used;
 	__u32   lcd_pwm_ch;
@@ -693,7 +707,7 @@ typedef enum
 	DISP_INIT_MODE_SCREEN1 		= 1,//fb0 for screen1
 	DISP_INIT_MODE_TWO_DIFF_SCREEN 	= 2,//fb0 for screen0 and fb1 for screen1
 	DISP_INIT_MODE_TWO_SAME_SCREEN 	= 3,//fb0(up buffer for screen0, down buffer for screen1)
-    DISP_INIT_MODE_SCREEN0_PARTLY = 4,//fb0(fb size fix to 1920*1080,but the source window is variable according to the output)
+        DISP_INIT_MODE_SCREEN0_PARTLY = 4,//fb0(fb size fix to 1920*1080,but the source window is variable according to the output)
 }__disp_init_mode_t;
 
 
@@ -713,8 +727,8 @@ typedef struct
 	__disp_pixel_fmt_t      format[2];
 	__disp_pixel_seq_t      seq[2];
 	__bool                  br_swap[2];
-	//__u32                   fb_width[2];
-	//__u32                   fb_height[2];
+	__u32                   fb_width[2];
+	__u32                   fb_height[2];
 }__disp_init_t;
 
 

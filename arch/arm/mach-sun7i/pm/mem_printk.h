@@ -19,6 +19,7 @@
 #define __MEM_PRINTK_H__
 
 #define DEBUG_BUFFER_SIZE (256)
+extern int dram_suspend_flag; 
 __s32 printk(const char *format, ...);
 __s32 printk_nommu(const char *format, ...);
 
@@ -33,3 +34,4 @@ __s32 printk_nommu(const char *format, ...);
 		}while(0);})
 
 #endif  //__MEM_PRINTK_H__
+

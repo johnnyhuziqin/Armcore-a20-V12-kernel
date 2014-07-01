@@ -135,15 +135,14 @@ void GetEDIDData(__u8 block,__u8 *buf)
 /////////////////////////////////////////////////////////////////////
 __s32 EDID_CheckSum(__u8 block,__u8 *buf)
 {
-    __s32 i = 0, CheckSum = 0;
+        __s32 i = 0, CheckSum = 0;
 	__u8 *pbuf = buf + 128*block;
 	
-    for( i = 0, CheckSum = 0 ; i < 128 ; i++ )
-    {
-        CheckSum += pbuf[i] ; 
-        CheckSum &= 0xFF ;
-    }
-
+        for( i = 0, CheckSum = 0 ; i < 128 ; i++ )
+        {
+                CheckSum += pbuf[i] ; 
+                CheckSum &= 0xFF ;
+        }
 	if( CheckSum != 0 )
 	{
 		__inf("EDID block %d checksum error\n",block);
@@ -161,10 +160,10 @@ __s32 EDID_Header_Check(__u8 *pbuf)
 	    pbuf[5] != 0xFF ||
 	    pbuf[6] != 0xFF ||
 	    pbuf[7] != 0x00)
-    {
-    	__inf("EDID block0 header error\n");
-        return -1 ;
-    }
+        {
+    	        __inf("EDID block0 header error\n");
+                return -1 ;
+        }
 	return 0;
 }
 
@@ -315,6 +314,7 @@ __s32 Parse_HDMI_VSDB(__u8 * pbuf,__u8 size)
 
 	if( (pbuf[0] ==0x03) &&	(pbuf[1] ==0x0c) &&	(pbuf[2] ==0x00) )	//check if it's HDMI VSDB
 	{
+		isHDMI = 1;
 		__inf("Find HDMI Vendor Specific DataBlock\n");
 	}
 	else
@@ -368,7 +368,8 @@ __s32 ParseEDID(void)
 
     memset(Device_Support_VIC,0,sizeof(Device_Support_VIC));
     memset(EDID_Buf,0,sizeof(EDID_Buf));
-    
+    isHDMI = 0;
+    YCbCr444_Support = 0;
 	DDC_Init();
 
     GetEDIDData(0, EDID_Buf);
@@ -409,6 +410,19 @@ __s32 ParseEDID(void)
 
 			if((EDID_Buf[0x80*i+0]==2)/*&&(EDID_Buf[0x80*i+1]==1)*/)
 			{
+				if( (EDID_Buf[0x80*i+1]>=1))
+				{
+						if(EDID_Buf[0x80*i+3]&0x20)
+						{
+							YCbCr444_Support = 1;
+							__inf("device support YCbCr44 output\n");
+                                                        if(rgb_only == 1)
+                                                        {
+                                                                __inf("rgb only test!\n");
+                                                                YCbCr444_Support = 0;
+                                                        }
+						}
+				}
 				
 				offset = EDID_Buf[0x80*i+2];
 				if(offset > 4)		//deal with reserved data block

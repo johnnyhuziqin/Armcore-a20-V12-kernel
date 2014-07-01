@@ -396,6 +396,16 @@ config DS1302
 	  into your computer.
 
 endif # RTC_LIB
+config MCUINF
+	bool "SMDT MCU interface"
+	depends on I2C
+	default y
+	help
+	  SMDT MCU Inteface.
+config A20_BOOT
+	tristate "A20 BOOT check support"
+        help
+		a20 boot error reboot !!!!
 
 config DTLK
 	tristate "Double Talk PC internal speech card support"

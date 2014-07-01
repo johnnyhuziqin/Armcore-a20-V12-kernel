@@ -293,6 +293,7 @@ static int sw_keypad_set_mclk(struct sw_keypad *keypad, u32 mod_clk)
 static void sw_keypad_start(struct sw_keypad *keypad)
 {
         int ret;
+	unsigned int val;
         dprintk(DEBUG_INIT, "sw keypad start\n");
     
         ret = sw_keypad_set_mclk(keypad, 1000000);
@@ -307,10 +308,15 @@ static void sw_keypad_start(struct sw_keypad *keypad)
                 return ;
                 
         }
-    
+        
 	/* Enable interrupt bits. */
-        writel(SW_KPINT_F_EN|SW_KPINT_R_EN, keypad->base + SW_KP_INT_CFG);
-        writel(SW_KPCTL_IFENB, keypad->base + SW_KP_CTL);
+	val = readl(keypad->base + SW_KP_INT_CFG);
+	val |= (SW_KPINT_F_EN | SW_KPINT_R_EN);
+        writel(val, keypad->base + SW_KP_INT_CFG);
+
+	val = readl(keypad->base + SW_KP_CTL);
+	val |= SW_KPCTL_IFENB;
+        writel(val, keypad->base + SW_KP_CTL);
     
         enable_irq(keypad->irq);
 }

@@ -44,6 +44,7 @@
 #define DBG_PSY_MSG(format,args...)   do {} while (0)
 #endif
 static int axp_debug = 0;
+static int vbus_curr_limit_debug = 1;
 #define	DBG_AXP_APP	1
 #if	 DBG_AXP_APP
 #define	DBG_APP_MSG(format,args...)	  printk("[AXP-APP]"format,##args)
@@ -144,7 +145,26 @@ static ssize_t axpdebug_show(struct class *class,
 	return sprintf(buf, "bat-debug value is %d\n", axp_debug);
 }
 
+static ssize_t vbuslimit_store(struct class *class,
+			struct class_attribute *attr,	const char *buf, size_t count)
+{
+	if(buf[0] == '1'){
+	   vbus_curr_limit_debug = 1;
+    }
+    else{
+	   vbus_curr_limit_debug = 0;
+    } 
+	return count;
+}
+
+static ssize_t vbuslimit_show(struct class *class,
+			struct class_attribute *attr,	char *buf)
+{
+	return sprintf(buf, "vbus curr limit value is %d\n", vbus_curr_limit_debug);
+}
+
 static struct class_attribute axppower_class_attrs[] = {
+    __ATTR(vbuslimit,S_IRUGO|S_IWUSR,vbuslimit_show,vbuslimit_store),
 	__ATTR(axpdebug,S_IRUGO|S_IWUSR,axpdebug_show,axpdebug_store),
 	__ATTR_NULL
 };
@@ -234,9 +254,9 @@ static void axp_set_startup_sequence(struct axp_charger *charger)
 	axp_write(charger->master,0xF4,0x06); //open REGF2/5 Lock
 	axp_write(charger->master,0xF2,0x04); //open REG10x Lock
 	axp_write(charger->master,0xFF,0x01);
-	axp_write(charger->master,0x03,0xc2); //set EXTEN power up at step 2 and 4ms step by step
+	axp_write(charger->master,0x03,0x00); //set EXTEN power up at step 2 and 4ms step by step
 					     // highest 2bit depend the startup time,00-1ms,01-4ms,10-16ms,11-32ms
-	axp_write(charger->master,0x04,0x08); //set Core-VDD power up at step 2
+	axp_write(charger->master,0x04,0x00); //set Core-VDD power up at step 2
 	axp_write(charger->master,0xFF,0x00);
 	axp_write(charger->master,0xF4,0x00); //Close all Lock
 	if(axp_debug){
@@ -309,7 +329,11 @@ static void axp_charger_update(struct axp_charger *charger)
 	if(!charger->ext_valid) {
 		charger->disvbat =  charger->vbat;
 		charger->disibat =  charger->ibat;
-	}
+	}else
+	{
+        charger->disvbat =  charger->vbat;
+		charger->disibat =  axp20_ibat_to_mA(charger->adc->idischar_res);
+    }
 }
 
 #if defined  (CONFIG_AXP_CHARGEINIT)
@@ -754,6 +778,7 @@ static int axp_battery_event(struct notifier_block *nb, unsigned long event,
 	}
 	else{
 
+//	if (early_suspend_flag == 0){
 		if((event) & AXP20_IRQ_PEKFE>>32) {
 			axp_keydown(charger);
 		}
@@ -761,6 +786,7 @@ static int axp_battery_event(struct notifier_block *nb, unsigned long event,
 		if((event) & AXP20_IRQ_PEKRE>>32) {
 			axp_keyup(charger);
 		}
+//    }
 	}
 	
 	axp_writes(charger->master,POWER20_INTSTS1,9,w);
@@ -1339,6 +1365,7 @@ void Set_Rest_Cap(struct axp_charger *charger, int rest_cap)
 	else
 		val	= ABS(rest_cap)	| 0x80;
 	axp_write(charger->master, AXP20_DATA_BUFFER4, val);
+    printk("****************Set_Rset_Cap=%d***********\n",rest_cap);
 }
 
 void Get_Rest_Cap(struct axp_charger *charger, int *rest_cap)
@@ -1361,6 +1388,7 @@ void Cou_Count_Clear(struct	axp_charger	*charger)
 	temp |=	0x80;
 	temp &=	0xbf;
 	axp_write(charger->master, AXP20_COULOMB_CONTROL, temp);
+ 
 }
 
 void Buffer_Cou_Set(struct axp_charger *charger,uint16_t Cou_Counter)
@@ -1543,8 +1571,8 @@ static void axp_charging_monitor(struct work_struct *work)
 			cap_count1 = 0;	
 		}
 
-		/*电池剩余容量校正，当其小于100，ocv大于4.1V，外部充电器在，且未在充电时，电池剩余容量自加，直到100*/
-		if((charger->vbat >= 4100) && (charger->rest_vol < 100) && (charger->bat_current_direction == 0)	&& (charger->ext_valid)&&(charger->charge_on)) {
+		/*电池剩余容量校正，当其小于100，ocv大于4.1V，外部充电器在，放电电流为0,且未在充电时，电池剩余容量自加，直到100*/
+		if((charger->vbat >= 4100) && (charger->rest_vol < 100) && (charger->bat_current_direction == 0)	&& (charger->ext_valid)&&(charger->charge_on) && (!charger->disibat)) {
 			if(cap_count2 >= TIMER5) {
 				DBG_PSY_MSG("Correct2:fix 100,charger->rest_vol = %d -> 100%%\n",charger->rest_vol);
 				charger->rest_vol ++;
@@ -1625,7 +1653,7 @@ static void axp_charging_monitor(struct work_struct *work)
 		charger->rest_vol =	rt_rest_vol;
 		DBG_PSY_MSG("init charger->rest_vol = %d\n",charger->rest_vol);
 		/* full	*/
-		if(charger->vbat >=	4100 &&	!charger->is_on	&& charger->ext_valid &&(charger->charge_on)) {
+		if(charger->vbat >=	4100 &&	!charger->is_on	&& charger->ext_valid &&(charger->charge_on)&&(!charger->disibat)) {
 			charger->rest_vol =	100;
 		}
 		/* charging*/
@@ -1674,7 +1702,7 @@ static void axp_charging_monitor(struct work_struct *work)
 		Set_Rest_Cap(charger,BATCAPCORRATE);
 		axp_write(charger->master, AXP20_DATA_BUFFER5, rt_rest_vol);
 		Cou_Count_Clear(charger);
-		axp_set_bits(charger->master,AXP20_DATA_BUFFER0,0x20);
+		axp_set_bits(charger->master,AXP20_DATA_BUFFER0,0x20);//Cou_Correction_Flag
 		printk("\n ============Capacity	Calibration	Start============ \n");
 		printk("\n ============	  Rest	Capacity  =	 %d	 ============ \n",rt_rest_vol);
 	}
@@ -1733,7 +1761,7 @@ static void axp_usb(struct work_struct *work)
 	{
 		printk("[axp_usb]axp_usbcurflag = %d\n",axp_usbcurflag);
 	}
-	if(axp_usbcurflag){
+	if(axp_usbcurflag&&vbus_curr_limit_debug){
 		if(axp_debug)
 		{
 			printk("set usbcur_pc %d mA\n",pmu_usbcurnew);
@@ -2140,7 +2168,6 @@ static int axp_battery_probe(struct platform_device *pdev)
 
 	axp_read(charger->master,AXP20_DATA_BUFFER0,&val);
 	Get_Rest_Cap(charger,&saved_cap);
-
 	if((val >> 6)& 0x01){
 		Cur_CoulombCounter = (Get_Bat_Coulomb_Count(charger));
 		DBG_PSY_MSG("Cur_CoulombCounter	= %d\n",Cur_CoulombCounter);
@@ -2164,7 +2191,7 @@ static int axp_battery_probe(struct platform_device *pdev)
 			Cou_Count_Clear(charger);
 		}
 		
-		if((charger->vbat > 4100) && (!charger->is_on) && (charger->ext_valid) && (charger->charge_on)){
+		if((charger->vbat > 4100) && (!charger->is_on) && (charger->ext_valid) && (charger->charge_on)&&(!charger->disibat)){
 			charger->rest_vol = 100;
 			saved_cap = 100 - 100 * (Cur_CoulombCounter) / bat_cap;
 			Set_Rest_Cap(charger,saved_cap);
@@ -2341,7 +2368,7 @@ static int axp20_suspend(struct platform_device *dev, pm_message_t state)
 	irq_w[5] = POWER20_INTSTS4;
 	irq_w[6] = 0xff;
 	irq_w[7] = POWER20_INTSTS5;
-	irq_w[8] = 0xff;
+	irq_w[8] = 0x80;
 	axp_writes(charger->master, POWER20_INTSTS1, 9, irq_w);
 
 	/* close all irqs*/
@@ -2397,7 +2424,7 @@ static int axp20_resume(struct platform_device *dev)
 			if(Cou_Correction_Flag){
 				printk("[AXP20-MFD] ----------charger finish need to be corrected-----------\n");
 				printk("[AXP20-MFD] ----------correct the coulunb counter-----------\n");
-				axp_read(charger->master, POWER20_DATA_BUFFER6, v);
+				axp_read(charger->master, AXP20_DATA_BUFFER5, v);
 				Cur_CoulombCounter = Get_Bat_Coulomb_Count(charger);
 				bat_cap	= ABS(Cur_CoulombCounter) / (100 - v[0]) * 100;
 				Buffer_Cou_Set(charger,bat_cap);
@@ -2464,7 +2491,7 @@ static int axp20_resume(struct platform_device *dev)
 		}
 
 /******************************出错处理，如果初始Pre_rest_cap估计偏小，导致充满后用库仑计计算的电量低于100%****************/
-		if((charger->vbat > 4100) && (charger->rest_vol	< 100) && (charger->bat_current_direction == 0x0) && (charger->	ext_valid == 1)&&(charger->charge_on)) {
+		if((charger->vbat > 4100) && (charger->rest_vol	< 100) && (charger->bat_current_direction == 0x0) && (charger->	ext_valid == 1)&&(charger->charge_on)&&(!charger->disibat)) {
 			DBG_PSY_MSG("Resume:charger->rest_vol = %d -> 100\n",charger->rest_vol);
 			charger->rest_vol =	100;
 			Cur_CoulombCounter = Get_Bat_Coulomb_Count(charger);
@@ -2501,7 +2528,7 @@ static int axp20_resume(struct platform_device *dev)
 		DBG_PSY_MSG("val = 0x%x,pre_rest_vol = %d,rest_vol = %d\n",val,pre_rest_vol,charger->rest_vol);
 
 		/* full	*/
-		if((charger->vbat) >= 4100 && !charger->bat_current_direction && charger->ext_valid &&(charger->charge_on)) {
+		if((charger->vbat) >= 4100 && !charger->bat_current_direction && charger->ext_valid &&(charger->charge_on)&&(!charger->disibat)) {
 			charger->rest_vol =	100;
 		}
 
@@ -2525,8 +2552,11 @@ static int axp20_resume(struct platform_device *dev)
 		if(pre_rest_vol	> rt_rest_vol){
 			DBG_PSY_MSG("\n	correct	rest vol!!!\n");
 			charger-> rest_vol = rt_rest_vol;
+            DBG_PSY_MSG("rt_rest_vol=%d\n",rt_rest_vol);
 			Cur_CoulombCounter = Get_Bat_Coulomb_Count(charger);
+             DBG_PSY_MSG("Cur_CoulombCounter=%d\n",Cur_CoulombCounter);
 			saved_cap =	rt_rest_vol	- 100* (Cur_CoulombCounter)	/ bat_cap;
+            DBG_PSY_MSG("saved_cap=%d\n",saved_cap);
 			if((saved_cap >= -127) && (saved_cap <= 127)){
 				Set_Rest_Cap(charger,saved_cap);
 			} else {

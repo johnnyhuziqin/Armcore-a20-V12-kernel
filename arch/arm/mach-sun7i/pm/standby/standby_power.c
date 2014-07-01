@@ -95,14 +95,14 @@ __s32 standby_power_init(__u32 wakeup_src)
 		reg_val |= 0x03;
 		twi_byte_rw(TWI_OP_WR, AXP_ADDR,AXP20_IRQ4, &reg_val);
 	}
-	
+#if 0	
 	if(wakeup_src & AXP_WAKEUP_USB){
 		/* enable usb plug-in / plug-out */
 		twi_byte_rw(TWI_OP_RD, AXP_ADDR,AXP20_IRQEN1, &reg_val);
 		reg_val |= 0x03<<2;
 		twi_byte_rw(TWI_OP_WR, AXP_ADDR,AXP20_IRQEN1, &reg_val);
 	}
-
+#endif
 	if(wakeup_src & AXP_WAKEUP_AC){
 		/* enable ac plug-in / plug-out */
 		twi_byte_rw(TWI_OP_RD, AXP_ADDR,AXP20_IRQEN1, &reg_val);

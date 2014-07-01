@@ -13,6 +13,7 @@
 
 #include <linux/module.h>
 #include <linux/device.h>
+#include <linux/mutex.h>
 #include <mach/powernow.h>
 
 #define POWERNOW_LEVEL              3
@@ -46,9 +47,9 @@ static struct sw_powernow_mode powernow_modes[] = {
     { .code = SW_POWERNOW_USEREVENT,    .name = "userevent"     },
     { .code = SW_POWERNOW_USB,          .name = "usb"           },
 };
-static int cur_mode = 1;
-static int tar_mode = 1;
-static struct work_struct powernow_queue;
+static int cur_mode = -1;
+
+DEFINE_MUTEX(mode_mutex);
 
 /*
  * register function to be called at sw_powernow mode changed.
@@ -65,27 +66,24 @@ int unregister_sw_powernow_notifier(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(unregister_sw_powernow_notifier);
 
-static void powernow_work(struct work_struct *work)
-{
-    unsigned long val = powernow_modes[tar_mode].code;
-    void *v = (void *)powernow_modes[tar_mode].name;
-
-    if (tar_mode == SW_POWERNOW_USEREVENT) {
-        if (cur_mode == SW_POWERNOW_EXTREMITY ||
-            cur_mode == SW_POWERNOW_USB)
-            return;
-    }
-
-	blocking_notifier_call_chain(&sw_powernow_notifier_list, val, v);
-    if (tar_mode != SW_POWERNOW_USEREVENT) {
-        cur_mode = tar_mode;
-    }
-}
-
 void sw_powernow_switch_to(int mode)
 {
-    tar_mode = mode;
-    schedule_work(&powernow_queue);
+    mutex_lock(&mode_mutex);
+
+    if (mode == SW_POWERNOW_USEREVENT) {
+        if (cur_mode == SW_POWERNOW_EXTREMITY ||
+            cur_mode == SW_POWERNOW_USB)
+            goto out;
+    }
+
+    blocking_notifier_call_chain(&sw_powernow_notifier_list,
+            powernow_modes[mode].code, powernow_modes[mode].name);
+    if (mode != SW_POWERNOW_USEREVENT) {
+        cur_mode = mode;
+    }
+
+out:
+    mutex_unlock(&mode_mutex);
 }
 EXPORT_SYMBOL(sw_powernow_switch_to);
 
@@ -142,8 +140,8 @@ static ssize_t available_modes_show(struct class *class, struct class_attribute 
 }
 
 static struct class_attribute class_attrs[] = {
-    __ATTR(mode, 0600, mode_show, mode_store),
-    __ATTR(available_modes, 0600, available_modes_show, NULL),
+    __ATTR(mode, 0660, mode_show, mode_store),
+    __ATTR(available_modes, 0660, available_modes_show, NULL),
     __ATTR_NULL,
 };
 
@@ -164,8 +162,6 @@ static int __init sw_powernow_init(void)
     } else {
         powernow_inf("create class sw_powernow done\n");
     }
-
-    INIT_WORK(&powernow_queue, powernow_work);
 
     return ret;
 }

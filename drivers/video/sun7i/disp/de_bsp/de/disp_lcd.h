@@ -7,6 +7,8 @@
 
 __s32 Disp_lcdc_init(__u32 sel);
 __s32 Disp_lcdc_exit(__u32 sel);
+__s32 Disp_lcdc_reg_isr(__u32 sel);
+
 
 #ifdef __LINUX_OSAL__
 __s32 Disp_lcdc_event_proc(__s32 irq, void *parg);

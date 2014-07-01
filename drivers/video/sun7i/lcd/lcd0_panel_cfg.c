@@ -13,6 +13,7 @@ static void LCD_bl_close(__u32 sel);
 static void LCD_panel_init(__u32 sel);
 static void LCD_panel_exit(__u32 sel);
 void lp079x01_init(void);
+void lp079x01_exit(void);
 #define spi_csx_set(v)	(LCD_GPIO_write(0, 3, v))       //PA05,pio3
 #define spi_sck_set(v)  (LCD_GPIO_write(0, 0, v))	//PA06,pio0
 #define spi_sdi_set(v)  (LCD_GPIO_write(0, 1, v))	//PA07,pio1
@@ -178,17 +179,10 @@ static void LCD_bl_close(__u32 sel)
 
 static void LCD_panel_init(__u32 sel)
 {
-        __panel_para_t *info = kmalloc(sizeof(__panel_para_t), GFP_KERNEL | __GFP_ZERO);        
-        lcd_get_panel_para(sel, info);    
+        __panel_para_t *info = kmalloc(sizeof(__panel_para_t), GFP_KERNEL | __GFP_ZERO);
+        lcd_get_panel_para(sel, info);
         if(info->lcd_if == LCD_IF_HV2DSI)
         {
-                lcd_2828_rst(0);
-                lcd_panel_rst(0);     
-                lcd_2828_pd(0);
-                LCD_delay_ms(20);
-                lcd_2828_rst(1);
-                lcd_panel_rst(1);
-                LCD_delay_ms(50);
                 lp079x01_init();
         }
         kfree(info);
@@ -197,7 +191,14 @@ static void LCD_panel_init(__u32 sel)
 
 static void LCD_panel_exit(__u32 sel)
 {
-	return ;
+        __panel_para_t *info = kmalloc(sizeof(__panel_para_t), GFP_KERNEL | __GFP_ZERO);
+        lcd_get_panel_para(sel, info);
+        if(info->lcd_if == LCD_IF_HV2DSI)
+        {
+                lp079x01_exit();
+        }
+        kfree(info);
+        return;
 }
 
 //sel: 0:lcd0; 1:lcd1
@@ -218,6 +219,14 @@ void LCD_get_panel_funs_0(__lcd_panel_fun_t * fun)
 
 void lp079x01_init(void)
 {
+        lcd_2828_rst(0);
+        lcd_panel_rst(0);
+        lcd_2828_pd(0);
+        LCD_delay_ms(20);
+        lcd_2828_rst(1);
+        lcd_panel_rst(1);
+        LCD_delay_ms(50);
+
 	spi_24bit_3wire(0x7000B1);  //VSA=50, HAS=64
 	spi_24bit_3wire(0x723240);
 
@@ -279,6 +288,17 @@ void lp079x01_init(void)
 	spi_24bit_3wire(0x72030b);
 }
 
+void lp079x01_exit(void)
+{
+        spi_24bit_3wire(0x7000B7); //enter LP mode
+        spi_24bit_3wire(0x720342);
+        LCD_delay_ms(50);
+        spi_24bit_3wire(0x700028); //display off
+        LCD_delay_ms(10);
+        spi_24bit_3wire(0x700010); //sleep in cmd
+        LCD_delay_ms(20);
+        lcd_2828_rst(0);
+}
 
 EXPORT_SYMBOL(LCD_get_panel_funs_0);
 

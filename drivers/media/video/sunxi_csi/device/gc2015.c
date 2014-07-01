@@ -1107,7 +1107,7 @@ static int sensor_write_array(struct v4l2_subdev *sd, struct regval_list *vals ,
 	
 	for(i = 0; i < size ; i++)
 	{
-		if(vals->reg_num[0] == 0xff && vals->reg_num[1] == 0xff) {
+		if(vals->reg_num[0] == 0xff) {
 			mdelay(vals->value[0]);
 		} else {
 			ret = sensor_write(sd, vals->reg_num, vals->value);

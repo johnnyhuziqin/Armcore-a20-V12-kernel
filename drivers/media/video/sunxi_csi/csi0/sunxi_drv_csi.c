@@ -134,6 +134,18 @@ static struct csi_fmt formats[] = {
 		.planes_cnt		= 3,
 	},
 	{
+		.name     		= "planar YVU 420",
+		.csi_if				= CSI_IF_HV8,
+		.ccm_fmt			= V4L2_MBUS_FMT_YUYV8_2X8,	//linux-3.0
+		.fourcc   		= V4L2_PIX_FMT_YVU420,
+		.field				= V4L2_FIELD_NONE,
+		.input_fmt		= CSI_YUV422,
+		.output_fmt		= CSI_PLANAR_YUV420,
+		.csi_field		= CSI_ODD,
+		.depth    		= 12,
+		.planes_cnt		= 3,
+	},
+	{
 		.name     		= "planar YUV 422 UV combined",
 		.csi_if				= CSI_IF_HV8,
 		.ccm_fmt			= V4L2_MBUS_FMT_YUYV8_2X8,	//linux-3.0
@@ -291,6 +303,18 @@ static struct csi_fmt formats[] = {
 		.planes_cnt		= 3,
 	},
 	{
+		.name     		= "planar YVU 420",
+		.csi_if				= CSI_IF_CCIR656_16,
+		.ccm_fmt			= V4L2_MBUS_FMT_UYVY8_2X8,	//linux-3.0
+		.fourcc   		= V4L2_PIX_FMT_YVU420,
+		.field				= V4L2_FIELD_NONE,
+		.input_fmt		= CSI_YUV422_16,
+		.output_fmt		= CSI_PLANAR_YUV420,
+		.csi_field		= CSI_ODD,
+		.depth    		= 12,
+		.planes_cnt		= 3,
+	},
+	{
 		.name     		= "planar YUV 422 UV combined",
 		.csi_if				= CSI_IF_CCIR656_16,
 		.ccm_fmt			= V4L2_MBUS_FMT_UYVY8_2X8,	//linux-3.0
@@ -369,6 +393,18 @@ static struct csi_fmt formats[] = {
 		.csi_if				= CSI_IF_CCIR656,
 		.ccm_fmt			= V4L2_MBUS_FMT_UYVY8_2X8,	//linux-3.0
 		.fourcc   		= V4L2_PIX_FMT_YUV420,
+		.field				= V4L2_FIELD_INTERLACED,
+		.input_fmt		= CSI_CCIR656,
+		.output_fmt		= CSI_FRAME_PLANAR_YUV420,
+		.csi_field		= CSI_ODD,
+		.depth    		= 12,
+		.planes_cnt		= 3,
+	},
+	{
+		.name     		= "planar YVU 420",
+		.csi_if				= CSI_IF_CCIR656,
+		.ccm_fmt			= V4L2_MBUS_FMT_UYVY8_2X8,	//linux-3.0
+		.fourcc   		= V4L2_PIX_FMT_YVU420,
 		.field				= V4L2_FIELD_INTERLACED,
 		.input_fmt		= CSI_CCIR656,
 		.output_fmt		= CSI_FRAME_PLANAR_YUV420,
@@ -1224,7 +1260,7 @@ static int vidioc_s_fmt_vid_cap(struct file *file, void *priv,
 	
 	switch(dev->fmt->ccm_fmt) {
 	case V4L2_MBUS_FMT_YUYV8_2X8://linux-3.0
-		if ((dev->fmt->fourcc == V4L2_PIX_FMT_NV61) || (dev->fmt->fourcc == V4L2_PIX_FMT_NV21))
+		if ((dev->fmt->fourcc == V4L2_PIX_FMT_NV61) || (dev->fmt->fourcc == V4L2_PIX_FMT_NV21) || (dev->fmt->fourcc == V4L2_PIX_FMT_YVU420))
 			dev->csi_mode.seq = CSI_YVYU;
 		else
 			dev->csi_mode.seq = CSI_YUYV;
@@ -3020,14 +3056,14 @@ static int csi_suspend(struct platform_device *pdev, pm_message_t state)
 	
 	csi_print("csi_suspend\n");
 	
-	if (dev->opened==1) {
+	if (dev->opened==1) {		
 		csi_clk_disable(dev);
 
 		if(dev->stby_mode == 0) {
 			csi_print("set camera to standby!\n");	
 			return v4l2_subdev_call(dev->sd,core, s_power, CSI_SUBDEV_STBY_ON);
 		} else {
-			csi_print("set camera to power off!\n");	
+			csi_print("set camera to power off!\n");
 			//close all the device power	
 			for (input_num=0; input_num<dev->dev_qty; input_num++) {
         /* update target device info and select it */
@@ -3100,8 +3136,75 @@ static int csi_resume(struct platform_device *pdev)
 				csi_print("sensor full initial success when resume from suspend!\n");
 			}
 		}
-	} 
-	
+	} 		
+	// add by lmm 
+	for (input_num=0; input_num<dev->dev_qty; input_num++)
+		{
+			if(strcmp(dev->ccm_cfg[input_num]->iovdd_str,"") && dev->ccm_cfg[input_num]->vol_iovdd >0)
+			{
+				dev->iovdd=regulator_get(NULL,dev->ccm_cfg[input_num]->iovdd_str);
+				if(IS_ERR(dev->iovdd))
+					csi_err("get iovdd fail\n");
+				
+				ret=regulator_set_voltage(dev->iovdd,dev->ccm_cfg[input_num]->vol_iovdd*1000,dev->ccm_cfg[input_num]->vol_iovdd*1000);
+				if(ret)
+				{
+					csi_err("unable to set voltage for iovdd \n");
+				}
+				
+				ret=regulator_enable(dev->iovdd);
+				
+				if(ret)
+				{
+					csi_err("unable to enable iovdd \n");	
+
+				}
+					
+			}
+
+			if(strcmp(dev->ccm_cfg[input_num]->avdd_str,"") && dev->ccm_cfg[input_num]->vol_avdd >0)
+			{
+				dev->avdd=regulator_get(NULL,dev->ccm_cfg[input_num]->avdd_str);
+				if(IS_ERR(dev->avdd))
+					csi_err("get avdd fail\n");
+				
+				ret=regulator_set_voltage(dev->avdd,dev->ccm_cfg[input_num]->vol_avdd*1000,dev->ccm_cfg[input_num]->vol_avdd*1000);
+				if(ret)
+				{
+					csi_err(" unable to set voltage for avdd\n");
+				}
+				
+				ret=regulator_enable(dev->avdd);
+				if(ret)
+				{
+					csi_err("unable to enable avdd \n");	
+				}
+			}
+			
+			if(strcmp(dev->ccm_cfg[input_num]->dvdd_str,"") && dev->ccm_cfg[input_num]->vol_dvdd >0)
+			{
+				dev->dvdd=regulator_get(NULL,dev->ccm_cfg[input_num]->dvdd_str);
+				if(IS_ERR(dev->dvdd))
+					csi_err("get dvdd fail\n");
+				
+				ret=regulator_set_voltage(dev->dvdd,dev->ccm_cfg[input_num]->vol_dvdd*1000,dev->ccm_cfg[input_num]->vol_dvdd*1000);
+				if(ret)
+				{
+					csi_err("unable to set voltage for dvdd \n");
+				}
+				
+				ret=regulator_enable(dev->dvdd);
+				
+				if(ret)
+				{
+					csi_err("unable to enable dvdd \n");	
+
+				}
+					
+			}
+
+		}
+	//add end
 	return 0;
 }
 

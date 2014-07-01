@@ -56,7 +56,6 @@ int g2d_closeclk(void)/* used once when g2d driver exit */
 
 int g2d_clk_on(void)/* used in request */
 {	
-    printk(">>> %s\n", __func__);
 	clk_enable(g2d_ahbclk);
 	clk_enable(g2d_dramclk);
 	clk_enable(g2d_mclk);

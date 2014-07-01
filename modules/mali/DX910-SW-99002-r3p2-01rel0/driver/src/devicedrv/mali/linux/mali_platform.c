@@ -16,6 +16,7 @@
 #include "mali_osk.h"
 #include <linux/mali/mali_utgard.h>
 #include <linux/platform_device.h>
+#include <linux/regulator/consumer.h>
 
 #include <linux/err.h>
 #include <linux/module.h>  
@@ -24,18 +25,91 @@
 #include <mach/clock.h>
 #include <mach/sys_config.h>
 #include <mach/includes.h>
-#include <linux/regulator/consumer.h>
+#include <mach/powernow.h>
 
-int mali_clk_div = 3;
-struct clk *h_ahb_mali, *h_mali_clk, *h_gpu_pll;
-int mali_clk_flag=0;
+#define CONFIG_GPU_DVFS
+//#define CONFIG_DYNAMIC_GPU_FREQ
+
+static int mali_clk_div    = 1;
+static int mali_clk_flag   = 0;
+struct clk *h_ahb_mali  = NULL;
+struct clk *h_mali_clk  = NULL;
+struct clk *h_gpu_pll   = NULL;
+
+//struct __sun7i_reserved_addr {
+//unsigned int paddr;
+//unsigned int size;
+//};
+
+struct __fb_addr_para {
+unsigned int fb_paddr;
+unsigned int fb_size;
+};
+
+void sun7i_get_gpu_addr(struct __sun7i_reserved_addr *gpu_addr);
+void sun7i_get_fb_addr_para(struct __fb_addr_para *fb_addr_para);
+
+#ifdef CONFIG_GPU_DVFS
+
+struct mali_dvfstab
+{
+    unsigned int vol_max;
+    unsigned int freq_max;
+    unsigned int freq_min;
+    unsigned int mbus_freq;
+};
+struct mali_dvfstab mali_dvfs_table[] = {
+    //extremity
+    {1.3*1000*1000, 336*1000*1000, 336*1000*1000, 400*1000*1000},
+    //perf
+    {1.2*1000*1000, 336*1000*1000, 192*1000*1000, 300*1000*1000},
+    //normal
+    {1.2*1000*1000, 240*1000*1000, 192*1000*1000, 300*1000*1000},
+    {0,0,0,0},
+    {0,0,0,0},
+};
+
+unsigned int cur_mode   = SW_POWERNOW_PERFORMANCE;
+unsigned int user_event = 0;
+struct regulator *mali_regulator = NULL;
+struct clk *h_mbus_clk           = NULL;
+static struct workqueue_struct *mali_dvfs_wq    = 0;
+static unsigned int mali_dvfs_utilization       = 255;
+static void mali_dvfs_work_handler(struct work_struct *w);
+static DECLARE_WORK(mali_dvfs_work, mali_dvfs_work_handler);
+//make compiler happy
+static mali_bool init_mali_dvfs(void);
+static void deinit_mali_dvfs(void);
+static int mali_freq_init(void);
+static void mali_freq_exit(void);
+
+#endif
+
 module_param(mali_clk_div, int, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(mali_clk_div, "Clock divisor for mali");
 
 static void mali_platform_device_release(struct device *device);
 void mali_gpu_utilization_handler(u32 utilization);
 
-struct regulator *mali_regulator = NULL;
+////////////for dynamic freq//////////////////////////////
+static ssize_t mali_use_show(struct device *dev,
+		struct device_attribute *attr, char *buf){
+
+    return sprintf(buf, "%d\n", mali_dvfs_utilization);
+}
+static DEVICE_ATTR(mali_use, 0444, mali_use_show, NULL);
+
+static struct attribute *sunxi_reg_attributes[] = {
+	&dev_attr_mali_use.attr,
+	NULL
+};
+
+static struct attribute_group sunxi_reg_attribute_group = {
+	.name = "aw_mali_use",
+	.attrs = sunxi_reg_attributes
+};
+
+////////////////////////////////////////////////////////////////////////
 
 typedef enum mali_power_mode_tag
 {
@@ -62,108 +136,15 @@ static struct platform_device mali_gpu_device =
 
 static struct mali_gpu_device_data mali_gpu_data = 
 {
-    .dedicated_mem_start = SW_GPU_MEM_BASE,
-    .dedicated_mem_size = SW_GPU_MEM_SIZE,
+//    .dedicated_mem_start = SW_GPU_MEM_BASE - PLAT_PHYS_OFFSET,
+//    .dedicated_mem_size = SW_GPU_MEM_SIZE,
     .shared_mem_size = 512*1024*1024,
-    .fb_start = SW_FB_MEM_BASE,
-    .fb_size = SW_FB_MEM_SIZE,
-    .utilization_interval = 1000,
+//    .fb_start = SW_FB_MEM_BASE,
+//    .fb_size = SW_FB_MEM_SIZE,
+    .utilization_interval = 2000,
     .utilization_handler = mali_gpu_utilization_handler,
 };
 
-////////////for dynamic freq//////////////////////////////
-static ssize_t mali_clk_show(struct device *dev,
-		struct device_attribute *attr, char *buf){
-    int mali_clk = 0;
-    
-    if (h_mali_clk){
-        mali_clk = clk_get_rate(h_mali_clk);
-    }
-    return sprintf(buf, "%d\n", mali_clk);
-}
-
-static ssize_t mali_vol_show(struct device *dev,
-		struct device_attribute *attr, char *buf){
-	int mali_vol = 0;
-	
-    if (mali_regulator){
-    	mali_vol = regulator_get_voltage(mali_regulator);
-    }
-	return sprintf(buf, "%d\n", mali_vol);
-}
-
-static ssize_t mali_vol_store(struct device *dev,struct device_attribute *attr,
-		const char *buf, size_t size){
-    unsigned long mali_vol = 0;
-    int ret = 0;
-    
-    ret = strict_strtoul(buf, 10, &mali_vol);
-    if (ret){
-        printk("mali vol failed to set:%d\n", (int)mali_vol);
-        return size;
-    }
-    ret = -1;
-    if (mali_regulator)
-        ret = regulator_set_voltage(mali_regulator, mali_vol, mali_vol);
-	return size;
-}
-
-static ssize_t mali_clk_store(struct device *dev,struct device_attribute *attr,
-		const char *buf, size_t size){
-    unsigned long mali_clk = 0;
-    int ret = 0;
-	
-	ret = strict_strtoul(buf,10, &mali_clk);
-    if (ret){
-        printk("err to set mali clk ret:%d\n", ret);
-        return size;    
-    }
-    if(clk_set_rate(h_gpu_pll, mali_clk)){
-        MALI_PRINT(("try to set mali clock failed!\n"));
-        return size;
-	}
-	
-	return size;
-}
-
-static DEVICE_ATTR(mali_clk, 0600, mali_clk_show, mali_clk_store);
-static DEVICE_ATTR(mali_vol, 0600, mali_vol_show, mali_vol_store);
-
-static struct attribute *sunxi_reg_attributes[] = {
-	&dev_attr_mali_clk.attr,
-	&dev_attr_mali_vol.attr,
-	NULL
-};
-
-static struct attribute_group sunxi_reg_attribute_group = {
-	.name = "aw_mali_freq",
-	.attrs = sunxi_reg_attributes
-};
-
-static int  mali_freq_init(void) {
-	int err;
-
-	err = sysfs_create_group(&mali_gpu_device.dev.kobj,
-						 &sunxi_reg_attribute_group);
-	if(err){
-    	pr_err("%s sysfs_create_group  error\n", __FUNCTION__);
-	}
-
-	mali_regulator = regulator_get(NULL, "axp20_ddr");
-	if (!mali_regulator){
-	    printk("mali_regulator get failed!\n");
-	    return -1;
-	}
-	return err;
-}
-
-static void mali_freq_exit(void) {
-
-	sysfs_remove_group(&mali_gpu_device.dev.kobj,
-						 &sunxi_reg_attribute_group);
-    regulator_put(mali_regulator);
-}
-////////////////////////////////////////////////////////////////////////
 static void mali_platform_device_release(struct device *device)
 {
     MALI_DEBUG_PRINT(2,("mali_platform_device_release() called\n"));
@@ -301,11 +282,20 @@ _mali_osk_errcode_t mali_platform_power_mode_change(mali_power_mode power_mode)
 int sun7i_mali_platform_device_register(void)
 {
     int err;
+    struct __sun7i_reserved_addr gpu_addr = {0};
+    struct __fb_addr_para fb_addr_para={0};
 
-    MALI_DEBUG_PRINT(2,("sun7i_mali_platform_device_register() called\n"));
+    sun7i_get_gpu_addr(&gpu_addr);
+    sun7i_get_fb_addr_para(&fb_addr_para);
+    MALI_DEBUG_PRINT(2,("sun7i_mali_platform_device_register() called: gpu_addr%x: size:%d, fb_addr:%x, size:%d\n",
+                        gpu_addr.paddr, gpu_addr.size, fb_addr_para.fb_paddr, fb_addr_para.fb_size));
 
     err = platform_device_add_resources(&mali_gpu_device, mali_gpu_resources, sizeof(mali_gpu_resources) / sizeof(mali_gpu_resources[0]));
     if (0 == err){
+        mali_gpu_data.dedicated_mem_start = gpu_addr.paddr - PLAT_PHYS_OFFSET;
+        mali_gpu_data.dedicated_mem_size = gpu_addr.size;
+        mali_gpu_data.fb_start = fb_addr_para.fb_paddr;
+        mali_gpu_data.fb_size = fb_addr_para.fb_size;
         err = platform_device_add_data(&mali_gpu_device, &mali_gpu_data, sizeof(mali_gpu_data));
         if(0 == err){
             err = platform_device_register(&mali_gpu_device);
@@ -319,7 +309,9 @@ int sun7i_mali_platform_device_register(void)
 				pm_runtime_enable(&(mali_gpu_device.dev));
 #endif
                 MALI_PRINT(("sun7i_mali_platform_device_register() sucess!!\n"));
+#ifdef CONFIG_GPU_DVFS
                 mali_freq_init();
+#endif
                 return 0;
             }
         }
@@ -336,17 +328,316 @@ void mali_platform_device_unregister(void)
     MALI_DEBUG_PRINT(2, ("mali_platform_device_unregister() called!\n"));
     
     mali_platform_deinit();
+#ifdef CONFIG_GPU_DVFS
     mali_freq_exit();
+#endif
     platform_device_unregister(&mali_gpu_device);
 }
 
-
+#ifndef CONFIG_GPU_DVFS
 void mali_gpu_utilization_handler(u32 utilization)
 {
 }
-
+#endif
 void set_mali_parent_power_domain(void* dev)
 {
 }
 
+#ifdef CONFIG_GPU_DVFS
 
+//modify  them , you must do know what you do
+#define MALI_CLK_MAX 336*1000*1000
+#define MALI_CLK_MIN 192*1000*1000
+#define MBUS_VOL_MAX 13*1000*100 //1.3V
+static int mali_dvfs_change_status(struct regulator *mreg, unsigned int vol,
+                                    struct clk *mali_clk, unsigned int mali_freq, 
+                                    struct clk *mbus_clk, unsigned int mbus_freq)
+{
+    unsigned int mvol   = 0;
+    unsigned int mfreq  = 0;
+    unsigned int mbfreq  = 0;
+
+    //do not use too much "if" to make the fucking code
+    mreg?(mvol = regulator_get_voltage(mreg)):0;
+    mali_clk?(mfreq = clk_get_rate(mali_clk)):0;
+    mbus_clk?(mbfreq = clk_get_rate(mbus_clk)):0;
+    
+    //vol up
+    if (mreg && (mvol < vol)){
+        regulator_set_voltage(mreg, vol, vol);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, 200*1000*1000):0);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, mbus_freq):0);
+        mfreq==mali_freq?0:(mali_clk?clk_set_rate(mali_clk, mali_freq):0);
+
+    }else if(mreg && vol && (mvol > vol)){
+        //vol down
+        mfreq==mali_freq?0:(mali_clk?clk_set_rate(mali_clk, mali_freq):0);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, 200*1000*1000):0);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, mbus_freq):0);
+        mvol > MBUS_VOL_MAX?0:(regulator_set_voltage(mreg, vol, vol));
+    }else{ 
+        mfreq==mali_freq?0:(mali_clk?clk_set_rate(mali_clk, mali_freq):0);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, 200*1000*1000):0);
+        mbfreq==mbus_freq?0:(mbus_clk?clk_set_rate(mbus_clk, mbus_freq):0);
+    }
+    //TODO, maybe need to delay for gpu stable here
+
+    return 0;
+}
+static void mali_dvfs_work_handler(struct work_struct *w)
+{
+    unsigned mode = cur_mode;//defence complictly
+    //check the mode valid
+    if (mode > 4){
+        mode = 1;
+        cur_mode = 1;
+    }
+    //extremmity mode, if user event comes, we do nothing
+    if (mode == SW_POWERNOW_EXTREMITY){
+        mali_dvfs_change_status(mali_regulator, 
+                                mali_dvfs_table[SW_POWERNOW_EXTREMITY].vol_max,
+                                h_gpu_pll,
+                                mali_dvfs_table[SW_POWERNOW_EXTREMITY].freq_max,
+                                h_mbus_clk,
+                                mali_dvfs_table[SW_POWERNOW_EXTREMITY].mbus_freq);
+        user_event =0;
+        MALI_DEBUG_PRINT(2,("mali_dvfs_work_handler set freq success, cur mode:%d, cur_freq:%d,cur_mbus:%d, cur_vol:%d,gpu usage:%d\n", 
+                mode, (int)clk_get_rate(h_mali_clk), (int)clk_get_rate(h_mbus_clk), regulator_get_voltage(mali_regulator), mali_dvfs_utilization));
+        return;
+    }
+
+    //usb mode set to current mode's freq_clk, if user event comes, we do nothing
+    if (mode == SW_POWERNOW_USB){
+        mali_dvfs_change_status(mali_regulator,
+                                mali_dvfs_table[mode].vol_max,
+                                h_gpu_pll,
+                                MALI_CLK_MAX,//if we are now in normal mode and set freq to MALI_CLK_MAX,fucking that!
+                                h_mbus_clk,
+                                mali_dvfs_table[mode].mbus_freq);
+        user_event = 0;
+        MALI_DEBUG_PRINT(2,("mali_dvfs_work_handler set freq success, cur mode:%d, cur_freq:%d,cur_mbus:%d, cur_vol:%d,gpu usage:%d\n", 
+                mode, (int)clk_get_rate(h_mali_clk), (int)clk_get_rate(h_mbus_clk), regulator_get_voltage(mali_regulator), mali_dvfs_utilization));
+        return;
+    }
+
+    //now here ,we neither usb mode nor extremity mode,if user_event be set, change to current mode's freq_max
+    if (user_event){
+        mali_dvfs_change_status(mali_regulator,
+                                mali_dvfs_table[mode].vol_max,
+                                h_gpu_pll,
+                                mali_dvfs_table[mode].freq_max, 
+                                NULL,
+                                0);
+        user_event = 0;
+        
+        MALI_DEBUG_PRINT(2,("mali_dvfs_work_handler set freq success, cur mode:%d, cur_freq:%d,cur_mbus:%d, cur_vol:%d,gpu usage:%d\n", 
+                mode, (int)clk_get_rate(h_mali_clk), (int)clk_get_rate(h_mbus_clk), regulator_get_voltage(mali_regulator), mali_dvfs_utilization));
+        return;
+    }
+    //esle we are normal or performance mode, we set vol and freq base on mali utilization
+#ifdef CONFIG_DYNAMIC_GPU_FREQ
+    {
+        unsigned int mali_freq = 0;
+        if (mali_dvfs_utilization > 127){
+            mali_freq = mali_dvfs_table[mode].freq_max;
+        }else if (mode == SW_POWERNOW_PERFORMANCE && mali_dvfs_utilization < 60 && mali_dvfs_utilization > 20){
+            mali_freq = 240*1000*1000;
+        }else if (mali_dvfs_utilization < 20){
+            mali_freq = mali_dvfs_table[mode].freq_min;
+        }else{
+            //we do nothing when in performance mode and mali_dvfs_utilization is between 127 and 60
+            //we do nothinf when in normal mode and mali_dvfs_utilization is between 127 and 20
+            return;
+        }
+        //defence to cash the gpu, we must have a max and min clk volues 
+        if (mali_freq < MALI_CLK_MIN){
+            printk("freq cant not be smaller than 192mHz!, mali_freq:%d\n", mali_freq);
+            mali_freq = MALI_CLK_MIN;
+        }else if(mali_freq > MALI_CLK_MAX){
+            printk("freq can not be bigger than 336MHz, mali_freq:%d\n", mali_freq);
+            mali_freq = MALI_CLK_MAX;
+        }
+            
+        mali_dvfs_change_status(mali_regulator,
+                                mali_dvfs_table[mode].vol_max,
+                                h_gpu_pll,
+                                mali_freq,
+                                h_mbus_clk,
+                                mali_dvfs_table[mode].mbus_freq);
+
+        MALI_DEBUG_PRINT(2,("mali_dvfs_work_handler set freq success, cur mode:%d, cur_freq:%d,cur_mbus:%d, cur_vol:%d,gpu usage:%d\n", 
+                mode, (int)clk_get_rate(h_mali_clk), (int)clk_get_rate(h_mbus_clk), regulator_get_voltage(mali_regulator), mali_dvfs_utilization));
+    }
+#else
+    {
+        
+        mali_dvfs_change_status(mali_regulator,
+                                mali_dvfs_table[mode].vol_max,
+                                h_gpu_pll,
+                                mali_dvfs_table[mode].freq_max,
+                                h_mbus_clk,
+                                mali_dvfs_table[mode].mbus_freq);
+
+        MALI_DEBUG_PRINT(2,("mali_dvfs_work_handler set freq success, cur mode:%d, cur_freq:%d,cur_mbus:%d, cur_vol:%d,gpu usage:%d\n", 
+                mode, (int)clk_get_rate(h_mali_clk), (int)clk_get_rate(h_mbus_clk), regulator_get_voltage(mali_regulator), mali_dvfs_utilization));
+    }
+#endif
+    return;
+}
+
+static mali_bool init_mali_dvfs(void)
+{
+    if (!mali_dvfs_wq)
+	{
+		mali_dvfs_wq = create_singlethread_workqueue("mali_dvfs");
+	}
+	return MALI_TRUE;
+}
+
+static void deinit_mali_dvfs(void)
+{
+	if (mali_dvfs_wq)
+	{
+		destroy_workqueue(mali_dvfs_wq);
+		mali_dvfs_wq = NULL;
+	}
+}
+
+void mali_gpu_utilization_handler(unsigned int utilization)
+{
+
+    mali_dvfs_utilization = utilization;
+#ifdef CONFIG_DYNAMIC_GPU_FREQ
+	queue_work(mali_dvfs_wq, &mali_dvfs_work);
+#endif
+	/*add error handle here*/
+}
+
+static void mali_mode_set(unsigned long mode)
+{
+    cur_mode = mode;
+    if (mali_regulator && h_mali_clk && h_mbus_clk){
+        queue_work(mali_dvfs_wq, &mali_dvfs_work);
+    }
+    //do not queue the work, just change the mode
+    //freq and vol will change on the work handle next schedule
+}
+
+static void mali_userevent_mode_set(void)
+{
+    if (mali_regulator && h_mali_clk && h_mbus_clk){
+        user_event = 1;
+        queue_work(mali_dvfs_wq, &mali_dvfs_work);
+    }
+}
+
+static int mali_powernow_mod_change(unsigned long code, void *cmd)
+{
+
+    switch (code) {
+        case SW_POWERNOW_EXTREMITY:
+            MALI_DEBUG_PRINT(2,(">>> %s\n\n\n\n\n\n\n\n", (char *)cmd));
+            mali_mode_set(code);
+            break;
+
+        case SW_POWERNOW_PERFORMANCE:
+        case SW_POWERNOW_NORMAL:
+            MALI_DEBUG_PRINT(2,(">>> %s\n\n\n\n\n\n\n\n\n", (char *)cmd));
+            mali_mode_set(code);
+            break;
+
+        case SW_POWERNOW_USEREVENT:
+            MALI_DEBUG_PRINT(2,(">>> %s\n\n\n\n\n\n\n\n\n", (char *)cmd));
+            mali_userevent_mode_set();
+            break;
+        case SW_POWERNOW_USB:
+            MALI_DEBUG_PRINT(2,(">>> %s\n\n\n\n\n\n", (char *)cmd));
+            mali_mode_set(code);
+            break;
+        default:
+            MALI_DEBUG_PRINT(2, ("powernow no such mode:%d, plz check!\n",code));
+            break;
+    }
+    return 0;
+}
+
+static int powernow_notifier_call(struct notifier_block *this, unsigned long code, void *cmd)
+{
+    if (cur_mode == code){
+        return 0;
+    }
+    MALI_DEBUG_PRINT(2, ("mali mode change\n\n\n\n\n\n\n"));
+    return mali_powernow_mod_change(code, cmd);
+}
+
+static struct notifier_block powernow_notifier = {
+	.notifier_call = powernow_notifier_call,
+};
+
+static int mali_freq_init(void)
+{
+    script_item_u   mali_use, mali_max_freq, mali_min_freq, mali_vol;
+
+	sysfs_create_group(&mali_gpu_device.dev.kobj,
+						 &sunxi_reg_attribute_group);
+    mali_regulator = regulator_get(NULL, "axp20_ddr");
+	if (IS_ERR(mali_regulator)) {
+	    printk("get mali regulator failed\n");
+        mali_regulator = NULL;
+	    return -1;
+	}
+    h_mbus_clk = clk_get(NULL, CLK_MOD_MBUS);
+    if (!h_mbus_clk || IS_ERR(h_mbus_clk)){
+        printk("get mbus clk failed!\n\n\n\n\n\n\n\n\n\n");
+        h_mbus_clk = NULL;
+        regulator_put(mali_regulator);
+        return -1;
+    }
+    
+    mali_dvfs_table[SW_POWERNOW_USB].vol_max = regulator_get_voltage(mali_regulator);
+    mali_dvfs_table[SW_POWERNOW_USB].mbus_freq = clk_get_rate(h_mbus_clk);
+    mali_dvfs_table[SW_POWERNOW_USB].freq_max = MALI_CLK_MAX;
+    mali_dvfs_table[SW_POWERNOW_USB].freq_min = MALI_CLK_MAX;
+    MALI_DEBUG_PRINT(2, ("vol:%d, mbus:%d\n", mali_dvfs_table[SW_POWERNOW_USB].vol_max,
+                        mali_dvfs_table[SW_POWERNOW_USB].mbus_freq));
+
+	if(SCIRPT_ITEM_VALUE_TYPE_INT == script_get_item("mali_para", "mali_used", &mali_use)) {
+		pr_info("%s(%d): get mali_para->mali_used success! mali_use %d\n", __func__, __LINE__, mali_use.val);
+		if(mali_use.val == 1) {
+			if(SCIRPT_ITEM_VALUE_TYPE_INT == script_get_item("mali_para", "mali_normal_freq", &mali_max_freq)) {
+                if (SCIRPT_ITEM_VALUE_TYPE_INT == script_get_item("mali_para", "mali_min_freq", &mali_min_freq)){
+                    if (mali_max_freq.val > 0 && mali_min_freq.val > 0){
+                        mali_dvfs_table[SW_POWERNOW_NORMAL].freq_max = mali_max_freq.val*1000*1000;
+                        mali_dvfs_table[SW_POWERNOW_NORMAL].freq_min = mali_min_freq.val*1000*1000;
+                        MALI_DEBUG_PRINT(2, ("mali_max_freq:%dMhz, mali_min_freq:%dMhz\n",
+                                            mali_max_freq.val, mali_min_freq.val));
+                    }        
+                }
+            }
+		}
+	} else
+		pr_info("%s(%d): get mali_para->mali_used failed!\n", __func__, __LINE__);
+   if (SCIRPT_ITEM_VALUE_TYPE_INT == script_get_item("target","dcdc3_vol", &mali_vol)){
+        if (mali_vol.val > 0){
+            mali_dvfs_table[SW_POWERNOW_PERFORMANCE].vol_max = mali_vol.val*1000;
+            mali_dvfs_table[SW_POWERNOW_NORMAL].vol_max = mali_vol.val*1000;
+        }
+   }
+    init_mali_dvfs();
+    register_sw_powernow_notifier(&powernow_notifier);
+
+	return 0;
+}
+
+static void mali_freq_exit(void)
+{
+    sysfs_remove_group(&mali_gpu_device.dev.kobj,
+						 &sunxi_reg_attribute_group);
+    deinit_mali_dvfs();
+    if (mali_regulator) {
+        regulator_put(mali_regulator);
+    }
+
+}
+
+#endif

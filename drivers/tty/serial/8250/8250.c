@@ -3198,8 +3198,9 @@ static int serial8250_suspend(struct platform_device *dev, pm_message_t state)
 		struct uart_8250_port *up = &serial8250_ports[i];
 
 		if (up->port.type != PORT_UNKNOWN && up->port.dev == &dev->dev){
+#ifdef CONFIG_SERIAL_8250_SUNXI
 			sunxi_8250_backup_reg(i,&up->port);
-			printk("==%s %d==\n",__FILE__,__LINE__);
+#endif
 			uart_suspend_port(&serial8250_reg, &up->port);
 			if (console_suspend_enabled){
 				sw_serial_do_pm(&up->port,3,0);
@@ -3217,9 +3218,10 @@ static int serial8250_resume(struct platform_device *dev)
 		struct uart_8250_port *up = &serial8250_ports[i];
 
 		if (up->port.type != PORT_UNKNOWN && up->port.dev == &dev->dev){
-
 			sw_serial_do_pm(&up->port,0,3);
+#ifdef CONFIG_SERIAL_8250_SUNXI
 			sunxi_8250_comeback_reg(i,&up->port);
+#endif
 			serial8250_resume_port(i);
 		}
 	}

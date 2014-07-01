@@ -167,37 +167,37 @@ static int sw_ahci_start(struct device *dev, void __iomem *addr)
 	script_item_u val;
 	script_item_value_type_e type;
 	int rc = 0;
-
-    type = script_get_item(sw_ahci_para_name, sw_ahci_used_name, &val);
-    if (type != SCIRPT_ITEM_VALUE_TYPE_INT) {
-        dev_err(dev, "Get SATA usedcfg failed\n");
-        rc = -EINVAL;
+		
+	type = script_get_item(sw_ahci_para_name, sw_ahci_used_name, &val);
+	if (type != SCIRPT_ITEM_VALUE_TYPE_INT) {
+		dev_err(dev, "Get SATA usedcfg failed\n");
+		rc = -EINVAL;
+		goto err2;
+	}
+	
+	if(!val.val)
+	{
+		dev_err(dev, "AHCI is disable\n");
+		rc = -EINVAL;
         goto err2;
-    }
+	}	
 
-    if(!val.val)
+	/*Enable mclk and hclk for AHCI*/
+	mclk = clk_get(dev, sw_ahci_mclk_name);
+	if (IS_ERR(mclk))
     {
-        dev_err(dev, "AHCI is disable\n");
-        rc = -EINVAL;
-        goto err2;
+   	  dev_err(dev, "Error to get module clk for AHCI\n");
+   	  rc = -EINVAL;
+   	  goto err2;
     }
-
-    /*Enable mclk and hclk for AHCI*/
-    mclk = clk_get(dev, sw_ahci_mclk_name);
-    if (IS_ERR(mclk))
-    {
-        dev_err(dev, "Error to get module clk for AHCI\n");
-        rc = -EINVAL;
-        goto err2;
-    }
-
-    hclk = clk_get(dev, sw_ahci_hclk_name);
-    if (IS_ERR(hclk))
-    {
-        dev_err(dev, "Error to get ahb clk for AHCI\n");
-        rc = -EINVAL;
-        goto err1;
-    }
+    
+	hclk = clk_get(dev, sw_ahci_hclk_name);
+	if (IS_ERR(hclk))
+	{
+		dev_err(dev, "Error to get ahb clk for AHCI\n");
+   	    rc = -EINVAL;
+   	    goto err1;
+	}
 	
 	/*Enable SATA Clock in SATA PLL*/
 	ahci_writel(CCMU_PLL6_VBASE, 0, ahci_readl(CCMU_PLL6_VBASE, 0)|(0x1<<14));
@@ -206,28 +206,30 @@ static int sw_ahci_start(struct device *dev, void __iomem *addr)
 	
 	sw_ahci_phy_init((unsigned int)addr);
 
-    type = script_get_item(sw_ahci_para_name, sw_ahci_gpio_name, &val);
-    if (type != SCIRPT_ITEM_VALUE_TYPE_PIO) {
-        dev_err(dev, "SATA power enable do not exist!!\n");
-    } else {
-        s32 ret;
-        u32 pio_hdle = val.gpio.gpio;
+	type = script_get_item(sw_ahci_para_name, sw_ahci_gpio_name, &val);
+	if (type != SCIRPT_ITEM_VALUE_TYPE_PIO) {
+		dev_err(dev, "SATA power enable do not exist!!\n");
+	}
+	else {
+		s32 ret;
+		u32 pio_hdle = val.gpio.gpio;
+		
+		ret = gpio_request(pio_hdle, "sata");
+		if (ret) {
+			dev_err(dev, "SATA request power enable failed\n");
+			rc = -EINVAL;
+			goto err0;
+		}
+		 
+		 sw_gpio_setcfg(pio_hdle, 1);
+		
+		 __gpio_set_value(pio_hdle, 1);
+     
+     gpio_free(pio_hdle);
+	}
 
-        ret = gpio_request(pio_hdle, "sata");
-        if (ret) {
-            dev_err(dev, "SATA request power enable failed\n");
-            rc = -EINVAL;
-            goto err0;
-        }
 
-        sw_gpio_setcfg(pio_hdle, 1);
-
-        __gpio_set_value(pio_hdle, 1);
-
-        gpio_free(pio_hdle);
-    }
-
-err0:
+err0:	
 	clk_put(hclk);
 err1:
 	clk_put(mclk);	
@@ -259,28 +261,29 @@ static void sw_ahci_stop(struct device *dev)
     	goto err1;
 	}
 
-    type = script_get_item(sw_ahci_para_name, sw_ahci_gpio_name, &val);
-    if (type != SCIRPT_ITEM_VALUE_TYPE_PIO) {
-        dev_err(dev, "SATA power enable do not exist!!\n");
-    } else {
-        s32 ret;
-        u32 pio_hdle = val.gpio.gpio;
+	type = script_get_item(sw_ahci_para_name, sw_ahci_gpio_name, &val);
+	if (type != SCIRPT_ITEM_VALUE_TYPE_PIO) {
+		dev_err(dev, "SATA power enable do not exist!!\n");
+	}
+	else {
+		s32 ret;
+		u32 pio_hdle = val.gpio.gpio;
+		
+		ret = gpio_request(pio_hdle, "sata");
+		if (ret) {
+			dev_err(dev, "SATA request power enable failed\n");
+			rc = -EINVAL;
+			goto err0;
+		}
+		 
+		 sw_gpio_setcfg(pio_hdle, 1);
+		
+		 __gpio_set_value(pio_hdle, 0);
+     
+     gpio_free(pio_hdle);
+	}
 
-        ret = gpio_request(pio_hdle, "sata");
-        if (ret) {
-            dev_err(dev, "SATA request power enable failed\n");
-            rc = -EINVAL;
-            goto err0;
-        }
-
-        sw_gpio_setcfg(pio_hdle, 1);
-
-        __gpio_set_value(pio_hdle, 0);
-
-        gpio_free(pio_hdle);
-    }
-
-err0:
+err0:	
 	/*Disable mclk and hclk for AHCI*/
 	clk_disable(mclk);
 	clk_disable(hclk);

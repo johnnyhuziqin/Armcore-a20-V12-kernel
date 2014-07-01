@@ -384,6 +384,8 @@ static int ehci_bus_resume (struct usb_hcd *hcd)
 	ehci_writel(ehci, (u32) ehci->async->qh_dma, &ehci->regs->async_next);
 
 	/* restore CMD_RUN, framelist size, and irq threshold */
+	if(ehci->rh_state == EHCI_RH_HALTED)
+        ehci->command |= CMD_RUN;
 	ehci_writel(ehci, ehci->command, &ehci->regs->command);
 	ehci->rh_state = EHCI_RH_RUNNING;
 

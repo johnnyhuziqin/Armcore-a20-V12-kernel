@@ -72,109 +72,36 @@ static struct resource disp_resource[DISP_IO_NUM] =
 	},
 };
 
-__s32 disp_dram_ctrl_init(void)
-{
-        (*((volatile __u32 *)(0xf1c6206c))=(0x00000003));
-        (*((volatile __u32 *)(0xf1c62014))=(0x00400302));
-        (*((volatile __u32 *)(0xf1c6201c))=(0x00400302));
-
-        (*((volatile __u32 *)(0xf1c62010))=(0x00800302));
-        (*((volatile __u32 *)(0xf1c62014))=(0x00400307));
-        (*((volatile __u32 *)(0xf1c62018))=(0x00800302));
-        (*((volatile __u32 *)(0xf1c6201c))=(0x00400307));
-        (*((volatile __u32 *)(0xf1c62074))=(0x00010310));
-        (*((volatile __u32 *)(0xf1c62078))=(0x00010310));
-        (*((volatile __u32 *)(0xf1c62080))=(0x00000310));
-        return 0;
-}
-
-__s32 disp_create_heap(__u32 pHeapHead, __u32 pHeapHeadPhy, __u32 nHeapSize)
-{
-        boot_heap_head.size    = boot_heap_tail.size = 0;
-        boot_heap_head.address = pHeapHead;
-        boot_heap_tail.address = pHeapHead + nHeapSize;
-        boot_heap_head.next    = &boot_heap_tail;
-        boot_heap_tail.next    = 0;
-
-        fb_start_phy = pHeapHeadPhy;
-        fb_start_virt = pHeapHead;
-
-        __inf("head:%x,tail:%x\n" ,boot_heap_head.address, boot_heap_tail.address);
-        return 0;
-}
-
 void *disp_malloc(__u32 num_bytes, __u32 *phy_addr)
 {
-        struct alloc_struct_t *ptr, *newptr;
-        __u32  actual_bytes;
-
-        if (!num_bytes)
+        __u32 actual_bytes;
+        __u32 address;
+        if(num_bytes != 0)
         {
-                return 0;
-        }
-
-        actual_bytes = MY_BYTE_ALIGN(num_bytes);    /* translate the byte count to size of long type       */
-
-        ptr = &boot_heap_head;                      /* scan from the boot_heap_head of the heap            */
-
-        while (ptr && ptr->next)                    /* look for enough memory for alloc                    */
-        {
-                if (ptr->next->address >= (ptr->address + ptr->size + (8 * 1024) + actual_bytes))
+                actual_bytes = MY_BYTE_ALIGN(num_bytes);
+                address = sunxi_mem_alloc(actual_bytes);
+                if(address)
                 {
-                    break;
+                        __inf("sunxi_mem_alloc ok, address=0x%x, size=0x%x\n", address, num_bytes);
+                        *phy_addr = address;
+                        return (void*)ioremap_nocache((unsigned long)address, actual_bytes);
                 }
-                                                /* find enough memory to alloc                         */
-                ptr = ptr->next;
+                __wrn("sunxi_mem_alloc fail, size=0x%x\n", num_bytes);
         }
-
-        if (!ptr->next)
-        {
-                __wrn(" it has reached the boot_heap_tail of the heap now\n");
-                return 0;                   /* it has reached the boot_heap_tail of the heap now              */
-        }
-
-        newptr = (struct alloc_struct_t *)(ptr->address + ptr->size);
-                                                /* create a new node for the memory block             */
-        if (!newptr)
-        {
-                __wrn(" create the node failed, can't manage the block\n");
-                return 0;                               /* create the node failed, can't manage the block     */
-        }
-
-        /* set the memory block chain, insert the node to the chain */
-        newptr->address = ptr->address + ptr->size + 4*1024;
-        newptr->size    = actual_bytes;
-        newptr->o_size  = num_bytes;
-        newptr->next    = ptr->next;
-        ptr->next       = newptr;
-
-        *phy_addr = newptr->address + fb_start_phy - fb_start_virt;
-
-        return (void *)newptr->address;
+        __wrn("disp_malloc size is zero\n");
+        return 0;
 }
 
-void  disp_free(void *p)
+void  disp_free(void *virt_addr, void* phy_addr)
 {
-        struct alloc_struct_t *ptr, *prev;
-
-	if( p == NULL )
-		return;
-
-        ptr = &boot_heap_head;                /* look for the node which po__s32 this memory block                     */
-        while (ptr && ptr->next)
+        if(virt_addr)
         {
-                if (ptr->next->address == (__u32)p)
-                        break;              /* find the node which need to be release                              */
-                ptr = ptr->next;
+                iounmap(virt_addr); 
         }
-
-	prev = ptr;
-	ptr = ptr->next;
-
-        if (!ptr) return;           /* the node is heap boot_heap_tail                                               */
-
-        prev->next = ptr->next;     /* delete the node which need be released from the memory block chain  */
-
+        if(phy_addr)
+        {
+                sunxi_mem_free((unsigned long)phy_addr);
+        }
         return ;
 }
 
@@ -501,7 +428,7 @@ int disp_mem_release(int sel)
 	if(g_disp_mm[sel].info_base == 0)
 		return -EINVAL;
 
-        disp_free((void *)g_disp_mm[sel].info_base);
+	disp_free((void *)g_disp_mm[sel].info_base, (void*)g_disp_mm[sel].mem_start);
         memset(&g_disp_mm[sel],0,sizeof(struct info_mm));
 #endif
 
@@ -681,7 +608,6 @@ void backlight_late_resume(struct early_suspend *h)
 
         printk("==display late resume enter\n");
 
-
         if(suspend_prestep != 2)
         {
                 BSP_disp_clk_on(2);
@@ -743,8 +669,8 @@ static struct early_suspend backlight_early_suspend_handler =
 
 #endif
 
-static __u32 image0_reg_bak,scaler0_reg_bak;
-static __u32 image1_reg_bak,scaler1_reg_bak;
+static __u32 image0_reg_bak,scaler0_reg_bak,tve0_reg_bak;
+static __u32 image1_reg_bak,scaler1_reg_bak,tve1_reg_bak;
 
 int disp_suspend(struct platform_device *pdev, pm_message_t state)
 {
@@ -804,19 +730,23 @@ int disp_suspend(struct platform_device *pdev, pm_message_t state)
         if(SUPER_STANDBY == standby_type)
         {
                 pr_info("[DISP]>>disp super standby enter<<\n");
-
+                BSP_image_clk_open(0);
                 image0_reg_bak = (__u32)kmalloc(0xe00 - 0x800, GFP_KERNEL | __GFP_ZERO);
                 scaler0_reg_bak = (__u32)kmalloc(0xa18, GFP_KERNEL | __GFP_ZERO);
+                tve0_reg_bak = (__u32)kmalloc(0x210, GFP_KERNEL | __GFP_ZERO);
                 BSP_disp_store_image_reg(0, image0_reg_bak);
                 BSP_disp_store_scaler_reg(0, scaler0_reg_bak);
+                BSP_disp_store_tvec_reg(0, tve0_reg_bak);
 
                 image1_reg_bak = (__u32)kmalloc(0xe00 - 0x800, GFP_KERNEL | __GFP_ZERO);
                 scaler1_reg_bak = (__u32)kmalloc(0xa18, GFP_KERNEL | __GFP_ZERO);
+                tve1_reg_bak = (__u32)kmalloc(0x210, GFP_KERNEL | __GFP_ZERO);
                 BSP_disp_store_image_reg(1, image1_reg_bak);
                 BSP_disp_store_scaler_reg(1, scaler1_reg_bak);
+                BSP_disp_store_tvec_reg(1, tve1_reg_bak);
+                BSP_image_clk_close(0);
         }
         BSP_disp_hdmi_suspend();
-
         BSP_disp_clk_off(1);
         BSP_disp_clk_off(2);
 
@@ -830,30 +760,31 @@ int disp_resume(struct platform_device *pdev)
 {
         int i = 0;
 
-        BSP_disp_clk_on(1);
-        BSP_disp_clk_on(2);
         if(SUPER_STANDBY == standby_type)
         {
-
                 pr_info("[DISP]>>disp super standby exit<<\n");
-
+                BSP_image_clk_open(0);
                 BSP_disp_restore_scaler_reg(0, scaler0_reg_bak);
                 BSP_disp_restore_image_reg(0, image0_reg_bak);
+                BSP_disp_restore_tvec_reg(0,tve0_reg_bak);
                 BSP_disp_restore_lcdc_reg(0);
                 kfree((void*)scaler0_reg_bak);
                 kfree((void*)image0_reg_bak);
+                kfree((void*)tve0_reg_bak);
 
                 BSP_disp_restore_scaler_reg(1, scaler1_reg_bak);
                 BSP_disp_restore_image_reg(1, image1_reg_bak);
+                BSP_disp_restore_tvec_reg(1,tve1_reg_bak);
                 BSP_disp_restore_lcdc_reg(1);
                 kfree((void*)scaler1_reg_bak);
                 kfree((void*)image1_reg_bak);
+                kfree((void*)tve1_reg_bak);
+                BSP_image_clk_close(0);
         }
-        //disp_dram_ctrl_init();
-
+        BSP_disp_clk_on(1);
+        BSP_disp_clk_on(2);
         BSP_disp_hdmi_resume();
-        Disp_TVEC_Init(0);
-        Disp_TVEC_Init(1);
+        
 #ifndef CONFIG_HAS_EARLYSUSPEND
 
         pr_info("[DISP]==disp_resume call==\n");

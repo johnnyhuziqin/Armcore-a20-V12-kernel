@@ -338,7 +338,7 @@ _mali_osk_errcode_t mali_memory_core_resource_os_memory(u32 size)
 
 	u32 alloc_order = 1; /* OS memory has second priority */
 
-	allocator = mali_os_allocator_create(size, 0 /* cpu_usage_adjust */, "Shared Mali GPU memory");
+	allocator = mali_os_allocator_create(size, PLAT_PHYS_OFFSET /* cpu_usage_adjust */, "Shared Mali GPU memory");
 	if (NULL == allocator)
 	{
 		MALI_DEBUG_PRINT(1, ("Failed to create OS memory allocator\n"));
@@ -381,7 +381,7 @@ _mali_osk_errcode_t mali_memory_core_resource_dedicated_memory(u32 start, u32 si
 	}
 
 	/* create generic block allocator object to handle it */
-	allocator = mali_block_allocator_create(start, 0 /* cpu_usage_adjust */, size, "Dedicated Mali GPU memory");
+	allocator = mali_block_allocator_create(start, PLAT_PHYS_OFFSET/* cpu_usage_adjust */, size, "Dedicated Mali GPU memory");
 
 	if (NULL == allocator)
 	{
@@ -476,7 +476,7 @@ static mali_physical_memory_allocation_result ump_memory_commit(void* ctx, mali_
 	for(i=0; i<nr_blocks; ++i)
 	{
 		MALI_DEBUG_PRINT(4, ("Mapping in 0x%08x size %d\n", ump_blocks[i].addr , ump_blocks[i].size));
-		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, ump_blocks[i].addr , 0, ump_blocks[i].size ))
+		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, ump_blocks[i].addr - PLAT_PHYS_OFFSET, PLAT_PHYS_OFFSET, ump_blocks[i].size ))
 		{
 			u32 size_allocated = *offset - ret_allocation->initial_offset;
 			MALI_DEBUG_PRINT(1, ("Mapping of external memory failed\n"));
@@ -495,7 +495,7 @@ static mali_physical_memory_allocation_result ump_memory_commit(void* ctx, mali_
 	{
 		/* Map in an extra virtual guard page at the end of the VMA */
 		MALI_DEBUG_PRINT(4, ("Mapping in extra guard page\n"));
-		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, ump_blocks[0].addr , 0, _MALI_OSK_MALI_PAGE_SIZE ))
+		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, ump_blocks[0].addr - PLAT_PHYS_OFFSET, PLAT_PHYS_OFFSET, _MALI_OSK_MALI_PAGE_SIZE ))
 		{
 			u32 size_allocated = *offset - ret_allocation->initial_offset;
 			MALI_DEBUG_PRINT(1, ("Mapping of external memory (guard page) failed\n"));
@@ -704,7 +704,7 @@ static mali_physical_memory_allocation_result external_memory_commit(void* ctx, 
 
 	MALI_DEBUG_PRINT(5, ("External map: mapping phys 0x%08X at mali virtual address 0x%08X staring at offset 0x%08X length 0x%08X\n", data[0], descriptor->mali_address, *offset, data[1]));
 
-	if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, data[0], 0, data[1]))
+	if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, data[0] - PLAT_PHYS_OFFSET, PLAT_PHYS_OFFSET, data[1]))
 	{
 		MALI_DEBUG_PRINT(1, ("Mapping of external memory failed\n"));
 		_mali_osk_free(ret_allocation);
@@ -716,7 +716,7 @@ static mali_physical_memory_allocation_result external_memory_commit(void* ctx, 
 	{
 		/* Map in an extra virtual guard page at the end of the VMA */
 		MALI_DEBUG_PRINT(4, ("Mapping in extra guard page\n"));
-		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, data[0], 0, _MALI_OSK_MALI_PAGE_SIZE))
+		if (_MALI_OSK_ERR_OK != mali_allocation_engine_map_physical(engine, descriptor, *offset, data[0] - PLAT_PHYS_OFFSET, PLAT_PHYS_OFFSET, _MALI_OSK_MALI_PAGE_SIZE))
 		{
 			u32 size_allocated = *offset - ret_allocation->initial_offset;
 			MALI_DEBUG_PRINT(1, ("Mapping of external memory (guard page) failed\n"));

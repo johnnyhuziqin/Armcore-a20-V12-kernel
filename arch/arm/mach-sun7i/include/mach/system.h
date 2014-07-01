@@ -73,4 +73,12 @@ struct sw_chip_id
 int sw_get_chip_id(struct sw_chip_id *);
 enum sw_ic_ver sw_get_ic_ver(void);
 
+struct __sun7i_reserved_addr {
+	unsigned int		paddr;    
+	unsigned int		size; 
+};
+
+extern void sun7i_get_gpu_addr(struct __sun7i_reserved_addr *gpu_addr);
+extern void sun7i_get_reserved_addr(struct __sun7i_reserved_addr *reserved_addr);
+
 #endif

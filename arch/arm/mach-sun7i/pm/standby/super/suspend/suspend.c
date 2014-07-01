@@ -181,6 +181,10 @@ int main(void)
         }else{
             retry = RETRY_TIMES;
         }
+
+        if (mem_power_is_pending(mem_para_info.axp_event)){
+            goto mem_power_init_err;
+        }
     }
 	
 	/* dram enter self-refresh */
@@ -218,22 +222,19 @@ suspend_err:
 suspend_dram_err:
 mem_power_init_err:
 
-#if 0
+#if 1
     if (likely(mem_para_info.axp_enable))
     {
+        retry = RETRY_TIMES;
         while(mem_power_exit(mem_para_info.axp_event)&&--retry){
             ;
-        }
-        if(0 == retry){
-            return -1;
-        }else{
-            retry = RETRY_TIMES;
         }
     }
 #endif
 
 	//busy_waiting();
 	restore_sp(sp_backup);
+    jump_to_resume((void *)mem_para_info.resume_pointer, mem_para_info.saved_runtime_context_svc);
 
 	return -1;
 }

@@ -522,6 +522,17 @@ static int ir_code_valid(unsigned long code)
 static irqreturn_t ir_irq_service(int irqno, void *dev_id)
 {
 	unsigned long intsta = ir_get_intsta();
+	unsigned long rxint = readl(IR_BASE + IR_RXINTE_REG);
+	unsigned long tmp;
+
+	tmp = intsta >> 8; 
+	//printk("=======fe3o4=========rxint:%x  intsta:%x intsta >> 8:%x,  intsta >> 8 & 0xf:%x\n",rxint , intsta, tmp, tmp & 0xf );
+	if((intsta & 0xff) == 0x12 && (tmp & 0xf) < 0x8 ){ //  
+		
+		//printk("==========fe3o4=====intsta:%x this is a wakeup interrupt !!! \n", intsta);
+		input_report_key(ir_dev, ir_keycodes[0x57], 1);
+		input_sync(ir_dev);
+	}
 	
 	dprintk(DEBUG_INT, "IR IRQ Serve\n");
 
@@ -663,6 +674,7 @@ static void sun7i_ir_suspend(struct early_suspend *h)
 	tmp &= 0xfffffffc;
 	writel(tmp, IR_BASE+IR_CTRL_REG);
 */
+#if 1
 	dprintk(DEBUG_SUSPEND, "EARLYSUSPEND:enter earlysuspend: sun7i_ir_suspend. \n");
         if(NULL == ir_clk || IS_ERR(ir_clk)) {
 		printk("ir_clk handle is invalid, just return!\n");
@@ -677,13 +689,16 @@ static void sun7i_ir_suspend(struct early_suspend *h)
 	} else {	
 		clk_disable(apb_ir_clk);
 	}
-	
+#endif
+#ifdef CONFIG_IR_SUN7I_LED
+    __gpio_set_value(ir_led, 0);
+#endif
 }
 
 //ÖØÐÂ»½ÐÑ
 static void sun7i_ir_resume(struct early_suspend *h)
 {
-
+#if 1
 	dprintk(DEBUG_INIT, "EARLYSUSPEND:enter laterresume: sun7i_ir_resume. \n");
 	
 	ir_code = 0;
@@ -691,6 +706,10 @@ static void sun7i_ir_resume(struct early_suspend *h)
 	ir_reset_rawbuffer();
 	ir_clk_cfg();
 	ir_reg_cfg();
+#endif
+#ifdef CONFIG_IR_SUN7I_LED
+    __gpio_set_value(ir_led, 1);
+#endif
 }
 #else
 #endif

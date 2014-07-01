@@ -1593,9 +1593,10 @@ static int sensor_s_hflip(struct v4l2_subdev *sd, int value)
 		return ret;
 	}
 	
+	regs.value[0] &= 0xfc;
 	switch (value) {
 		case 0:
-		  regs.value[0] &= 0xfc;
+		  regs.value[0] |= info->vflip<<1;
 			break;
 		case 1:
 			regs.value[0] |= (0x01|(info->vflip<<1));
@@ -1666,9 +1667,10 @@ static int sensor_s_vflip(struct v4l2_subdev *sd, int value)
 		return ret;
 	}
 	
+	regs.value[0] &= 0xfc;
 	switch (value) {
 		case 0:
-		  regs.value[0] &= 0xfc;
+		  regs.value[0] |=info->hflip;
 			break;
 		case 1:
 			regs.value[0] |= (0x02|info->hflip);

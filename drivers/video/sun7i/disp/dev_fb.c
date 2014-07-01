@@ -1,9 +1,14 @@
 #include "drv_disp_i.h"
 #include "dev_disp.h"
 
+struct __fb_addr_para {
+        int fb_paddr;
+        int fb_size;
+};
 
 extern fb_info_t g_fbi;
 
+static struct __fb_addr_para global_fb_addr;
 
 #define FBHANDTOID(handle)  ((handle) - 100)
 #define FBIDTOHAND(ID)  ((ID) + 100)
@@ -153,6 +158,20 @@ __s32 parser_disp_init_para(__disp_init_t * init_para)
         }
         init_para->scaler_mode[0]= value;
 
+	if(OSAL_Script_FetchParser_Data("disp_init", "fb0_width", &value, 1) < 0)
+	{
+		__wrn("fetch script data disp_init.fb0_width fail\n");
+		return -1;
+	}
+	init_para->fb_width[0]= value;
+
+	if(OSAL_Script_FetchParser_Data("disp_init", "fb0_height", &value, 1) < 0)
+	{
+		__wrn("fetch script data disp_init.fb0_height fail\n");
+		return -1;
+	}
+	init_para->fb_height[0]= value;
+
         //fb1
         if(OSAL_Script_FetchParser_Data("disp_init", "fb1_framebuffer_num", &value, 1) < 0)
         {
@@ -182,6 +201,20 @@ __s32 parser_disp_init_para(__disp_init_t * init_para)
         }
         init_para->scaler_mode[1]= value;
 
+	if(OSAL_Script_FetchParser_Data("disp_init", "fb1_width", &value, 1) < 0)
+	{
+		__wrn("fetch script data disp_init.fb1_width fail\n");
+		return -1;
+	}
+	init_para->fb_width[1]= value;
+
+	if(OSAL_Script_FetchParser_Data("disp_init", "fb1_height", &value, 1) < 0)
+	{
+		__wrn("fetch script data disp_init.fb1_height fail\n");
+		return -1;
+	}
+	init_para->fb_height[1]= value;
+
 
         __inf("====display init para begin====\n");
         __inf("b_init:%d\n", init_para->b_init);
@@ -199,6 +232,8 @@ __s32 parser_disp_init_para(__disp_init_t * init_para)
                 __inf("seq[%d]:%d\n", i, init_para->seq[i]);
                 __inf("br_swap[%d]:%d\n", i, init_para->br_swap[i]);
                 __inf("b_scaler_mode[%d]:%d\n", i, init_para->scaler_mode[i]);
+		__inf("fb_width[%d]:%d\n", i, init_para->fb_width[i]);
+		__inf("fb_height[%d]:%d\n", i, init_para->fb_height[i]);
         }
         __inf("====display init para end====\n");
 
@@ -299,9 +334,10 @@ static int __init Fb_map_video_memory(struct fb_info *info)
         info->screen_base = (char __iomem *)disp_malloc(info->fix.smem_len, &info->fix.smem_start);
         if(info->screen_base)
         {
-                __inf("Fb_map_video_memory, pa=0x%08lx size:0x%x\n",info->fix.smem_start, info->fix.smem_len);
+                __inf("Fb_map_video_memory, pa=0x%x size:0x%x\n",info->fix.smem_start, info->fix.smem_len);
                 memset(info->screen_base,0,info->fix.smem_len);
-
+                global_fb_addr.fb_paddr=info->fix.smem_start;
+                global_fb_addr.fb_size=info->fix.smem_len;
                 return 0;
         }else
         {
@@ -319,10 +355,21 @@ static inline void Fb_unmap_video_memory(struct fb_info *info)
 	
 	free_pages((unsigned long)info->screen_base,get_order(map_size));
 #else
-        disp_free((void *)info->screen_base);
+    	disp_free((void *)info->screen_base, (void*)info->fix.smem_start);
 #endif
 }
 
+
+
+void sun7i_get_fb_addr_para(struct __fb_addr_para *fb_addr_para){
+
+        if(fb_addr_para){
+                fb_addr_para->fb_paddr = global_fb_addr.fb_paddr;
+                fb_addr_para->fb_size  = global_fb_addr.fb_size;
+        }
+}
+
+EXPORT_SYMBOL(sun7i_get_fb_addr_para);
 
 
 __s32 disp_fb_to_var(__disp_pixel_fmt_t format, __disp_pixel_seq_t seq, __bool br_swap, struct fb_var_screeninfo *var)//todo
@@ -1143,8 +1190,7 @@ __s32 Display_Fb_Request(__u32 fb_id, __disp_fb_create_para_t *fb_para)
 	__disp_layer_info_t layer_para;
 	__u32 sel;
 	__u32 xres, yres;
-    unsigned long ulLCM;
-
+    
 	__inf("Display_Fb_Request,fb_id:%d\n", fb_id);
 
         if(g_fbi.fb_enable[fb_id])
@@ -1169,9 +1215,9 @@ __s32 Display_Fb_Request(__u32 fb_id, __disp_fb_create_para_t *fb_para)
 	info->var.yoffset       = 0;
 	info->var.xres          = xres;
 	info->var.yres          = yres;
-	info->var.xres_virtual  = (xres + 15)/16 * 16;
+	info->var.xres_virtual  = xres;
 	info->var.yres_virtual  = yres * fb_para->buffer_num;
-        info->fix.line_length   = (((xres * info->var.bits_per_pixel) >> 3)+(64-1))&(~(64-1));
+        info->fix.line_length   = (xres * info->var.bits_per_pixel) >> 3;
         info->fix.smem_len      = info->fix.line_length * yres  * fb_para->buffer_num;
         Fb_map_video_memory(info);
 
@@ -1193,7 +1239,8 @@ __s32 Display_Fb_Request(__u32 fb_id, __disp_fb_create_para_t *fb_para)
                                 info->var.hsync_len = tt.hor_sync_time;
                                 info->var.vsync_len = tt.ver_sync_time;
                         }
-
+                        info->var.width = BSP_disp_get_screen_physical_width(sel);
+                        info->var.height = BSP_disp_get_screen_physical_height(sel);
                         if(fb_para->fb_mode == FB_MODE_DUAL_SAME_SCREEN_TB)
                         {
                                 src_height = yres/ 2;
@@ -1243,7 +1290,7 @@ __s32 Display_Fb_Request(__u32 fb_id, __disp_fb_create_para_t *fb_para)
                         layer_para.fb.addr[0] = (__u32)info->fix.smem_start;
                         layer_para.fb.addr[1] = 0;
                         layer_para.fb.addr[2] = 0;
-                        layer_para.fb.size.width = (fb_para->width + 15)/16 * 16;
+                        layer_para.fb.size.width = fb_para->width;
                         layer_para.fb.size.height = fb_para->height;
                         layer_para.fb.cs_mode = DISP_BT601;
                         layer_para.b_from_screen = 0;
@@ -1363,11 +1410,6 @@ __s32 Fb_Init(__u32 from)
 
         if(from == 0)//call from lcd driver
         {
-#ifdef FB_RESERVED_MEM
-                __inf("fbmem: fb_start=%lu, fb_size=%lu\n", SW_FB_MEM_BASE, SW_FB_MEM_SIZE);
-                disp_create_heap((unsigned long)(ioremap_nocache(SW_FB_MEM_BASE, SW_FB_MEM_SIZE)), SW_FB_MEM_BASE, SW_FB_MEM_SIZE);
-#endif
-
                 for(i=0; i<8; i++)
                 {
                 	g_fbi.fbinfo[i] = framebuffer_alloc(0, g_fbi.dev);
@@ -1484,8 +1526,16 @@ __s32 Fb_Init(__u32 from)
                                 screen_id = 1;
                         }
                         fb_para.buffer_num= g_fbi.disp_init.buffer_num[i];
-                        fb_para.width = BSP_disp_get_screen_width(screen_id);
-                        fb_para.height = BSP_disp_get_screen_height(screen_id);
+			if((g_fbi.disp_init.fb_width[i] == 0) || (g_fbi.disp_init.fb_height[i] == 0))
+			{
+				fb_para.width = BSP_disp_get_screen_width(screen_id);
+				fb_para.height = BSP_disp_get_screen_height(screen_id);
+			}
+			else
+			{
+				fb_para.width = g_fbi.disp_init.fb_width[i];
+				fb_para.height = g_fbi.disp_init.fb_height[i];
+			}
                         fb_para.output_width = BSP_disp_get_screen_width(screen_id);
                         fb_para.output_height = BSP_disp_get_screen_height(screen_id);
                         fb_para.mode = (g_fbi.disp_init.scaler_mode[i]==0)?DISP_LAYER_WORK_MODE_NORMAL:DISP_LAYER_WORK_MODE_SCALER;

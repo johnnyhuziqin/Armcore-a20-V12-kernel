@@ -27,8 +27,8 @@
 #include <linux/mutex.h>
 #include <linux/rcupdate.h>
 
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
-#include <linux/cpufreq.h>
+#ifdef CONFIG_SW_POWERNOW
+#include <mach/powernow.h>
 #endif
 
 #include "input-compat.h"
@@ -51,15 +51,22 @@ static LIST_HEAD(input_handler_list);
 static DEFINE_MUTEX(input_mutex);
 
 
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
-static struct workqueue_struct	*cpufreq_usrevent;
-static void cpufreq_notify(struct work_struct *work)
-{
-    cpufreq_user_event_notify();
-}
-static DECLARE_WORK(request_cpufreq_notify, cpufreq_notify);
-#endif
+#ifdef CONFIG_SW_POWERNOW
+static int               userevent_actived = 0;
+static struct timer_list userevent_timer;
 
+void userevent_timer_func(unsigned long expires)
+{
+    userevent_actived = 0;
+}
+
+static struct work_struct userevent_work;
+
+static void userevent_queue(struct work_struct *work)
+{
+    sw_powernow_switch_to(SW_POWERNOW_USEREVENT);
+}
+#endif
 
 static struct input_handler *input_table[8];
 
@@ -86,7 +93,8 @@ static int input_defuzz_abs_event(int value, int old_val, int fuzz)
 }
 
 
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
+#ifdef CONFIG_SW_POWERNOW
+#define GSENSOR_VENDOR_CODE             0x5753
 static const char *gsensor_name_list[] = {
 	"bma250",
 	"mma8452",
@@ -114,20 +122,18 @@ static void input_pass_event(struct input_dev *dev,
 	struct input_handler *handler;
 	struct input_handle *handle;
 
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
-	int i;
-	bool not_gsensor = true;
+#ifdef CONFIG_SW_POWERNOW
+    if (dev->id.vendor != GSENSOR_VENDOR_CODE) {
+        if (!userevent_actived) {
+            schedule_work(&userevent_work);
 
-	for(i = 0; i < ARRAY_SIZE(gsensor_name_list) - 1; i++) {
-		if(!strcmp(gsensor_name_list[i], dev->name)) {
-			not_gsensor = false;
-			break;
-		}
-	}
-    /* notify cpu-freq sub-system that some user event happend */
-	if(not_gsensor) {
-		queue_work(cpufreq_usrevent, &request_cpufreq_notify);
-	}
+            userevent_actived = 1;
+
+            userevent_timer.expires = jiffies + HZ;
+            userevent_timer.function = userevent_timer_func;
+            add_timer(&userevent_timer);
+        }
+    }
 #endif
 
 	rcu_read_lock();
@@ -1869,6 +1875,16 @@ int input_register_device(struct input_dev *dev)
 	const char *path;
 	int error;
 
+#ifdef CONFIG_SW_POWERNOW
+    int i;
+	for (i = 0; i < ARRAY_SIZE(gsensor_name_list) - 1; i++) {
+        if (strcmp(dev->name, gsensor_name_list[i]) == 0) {
+            dev->id.vendor = GSENSOR_VENDOR_CODE;
+            break;
+        }
+    }
+#endif
+
 	/* Every input device generates EV_SYN/SYN_REPORT events. */
 	__set_bit(EV_SYN, dev->evbit);
 
@@ -2206,19 +2222,12 @@ static int __init input_init(void)
 		goto fail2;
 	}
 
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
-	cpufreq_usrevent = create_workqueue("cpufreq_uevent");
-	if (!cpufreq_usrevent) {
-		printk(KERN_ERR "Creation of cpufreq_usrevent failed\n");
-		goto fail3;
-	}
+#ifdef CONFIG_SW_POWERNOW
+    INIT_WORK(&userevent_work, userevent_queue);
+    init_timer(&userevent_timer);
 #endif
 
 	return 0;
-
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
- fail3: unregister_chrdev(INPUT_MAJOR, "input");
-#endif
 
  fail2:	input_proc_exit();
  fail1:	class_unregister(&input_class);
@@ -2227,10 +2236,6 @@ static int __init input_init(void)
 
 static void __exit input_exit(void)
 {
-#ifdef CONFIG_CPU_FREQ_USR_EVNT_NOTIFY
-    destroy_workqueue(cpufreq_usrevent);
-#endif
-
 	input_proc_exit();
 	unregister_chrdev(INPUT_MAJOR, "input");
 	class_unregister(&input_class);

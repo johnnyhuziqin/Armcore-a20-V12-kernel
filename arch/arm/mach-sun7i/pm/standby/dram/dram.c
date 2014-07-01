@@ -76,14 +76,10 @@ void DRAMC_enter_selfrefresh(void)
 	//issue prechage all command
 //	mctl_precharge_all();
 
-    //1T MODE
-    //reg_val = mctl_read_w(SDR_CCR);
-    //reg_val |= 0x1U<<14;
-    //reg_val &= ~(0x1U<<17);
-    //reg_val |= 0x1<<5;
-    //mctl_write_w(SDR_CCR, reg_val);
-
-    //printk_nommu("[DRAM]before selfrefresh ccr register = %x\n", mctl_read_w(SDR_CCR));
+	//disable auto-fresh			//by cpl 2013-5-6
+	reg_val = mctl_read_w(SDR_DRR);
+	reg_val |= 0x1U<<31;
+	mctl_write_w(SDR_DRR, reg_val);
 
 	//enter into self-refresh
 	reg_val = mctl_read_w(SDR_DCR);

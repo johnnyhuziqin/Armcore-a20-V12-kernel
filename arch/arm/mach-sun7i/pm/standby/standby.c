@@ -41,6 +41,7 @@ struct aw_pm_info  pm_info;
 
 #define DRAM_BASE_ADDR      0xc0000000
 static __u8 dram_traning_area_back[DRAM_TRANING_SIZE];
+struct standby_ir_buffer ir_buffer; //add by fe3o4
 
 /*
 *********************************************************************************************************
@@ -99,14 +100,17 @@ int main(struct aw_pm_info *arg)
         mem_enable_int(INT_SOURCE_EXTNMI);
     }
     if(pm_info.standby_para.event_enable & SUSPEND_WAKEUP_SRC_KEY){
-        standby_key_init();
-        mem_enable_int(INT_SOURCE_LRADC);
+//        standby_key_init();
+//        mem_enable_int(INT_SOURCE_LRADC);
     }
+	printk("fe3o4 test print here pm_info.standby_para.event_enable:%x\n", pm_info.standby_para.event_enable);
     if(pm_info.standby_para.event_enable & SUSPEND_WAKEUP_SRC_IR){
+		printk("fe3o4 SUSPEND_WAKEUP_SRC_IR is enable\n");
         standby_ir_init();
         mem_enable_int(INT_SOURCE_IR0);
         mem_enable_int(INT_SOURCE_IR1);
     }
+	printk("fe3o4 test print here\n");
     if(pm_info.standby_para.event_enable & SUSPEND_WAKEUP_SRC_ALARM){
         //standby_alarm_init();???
         mem_enable_int(INT_SOURCE_ALARM);
@@ -117,10 +121,10 @@ int main(struct aw_pm_info *arg)
     }
     if(pm_info.standby_para.event_enable & SUSPEND_WAKEUP_SRC_TIMEOFF){
         /* set timer for power off */
-        if(pm_info.standby_para.time_off) {
-            standby_tmr_set(pm_info.standby_para.time_off);
-            mem_enable_int(INT_SOURCE_TIMER0);
-        }
+//        if(pm_info.standby_para.time_off) {
+//            standby_tmr_set(pm_info.standby_para.time_off);
+//            mem_enable_int(INT_SOURCE_TIMER0);
+//        }
     }
     if(pm_info.standby_para.event_enable & SUSPEND_WAKEUP_SRC_PIO){
         mem_enable_int(INT_SOURCE_GPIO);
@@ -129,6 +133,7 @@ int main(struct aw_pm_info *arg)
     /* save stack pointer registger, switch stack to sram */
     sp_backup = save_sp();
     /* enable dram enter into self-refresh */
+    dram_suspend_flag = 1;
     dram_power_save_process(0);
 	//mctl_self_refresh_entry();
     
@@ -144,6 +149,7 @@ int main(struct aw_pm_info *arg)
     
     /* disable watch-dog    */
     standby_tmr_disable_watchdog();
+    dram_suspend_flag = 0;
 
     /* restore stack pointer register, switch stack back to dram */
     restore_sp(sp_backup);
@@ -241,8 +247,11 @@ static void standby(void)
     standby_clk_core2losc();
     #if(ALLOW_DISABLE_HOSC)
     // disable HOSC, and disable LDO
+    #if 0   //add by fe3o4  
+    
     standby_clk_hoscdisable();
     standby_clk_ldodisable();
+    #endif        //add by fe3o4  
     #endif
 
     /* cpu enter sleep, wait wakeup by interrupt */

@@ -356,6 +356,7 @@ __s32 BSP_disp_layer_request(__u32 sel, __disp_layer_work_mode_t mode)
     __u32   cpu_sr;
     __layer_man_t * layer_man;
 
+    image_clk_on(sel, 0);
     OSAL_IrqLock(&cpu_sr);
     hid = Layer_Get_Idle_Hid(sel);
     if(hid == DIS_NO_RES)
@@ -416,7 +417,9 @@ __s32 BSP_disp_layer_release(__u32 sel, __u32 hid)
             if(layer_man->para.b_from_screen)
             {
                 Image_close(1-sel);
-                image_clk_off(1-sel);
+                DE_BE_DisableINT(1-sel, DE_IMG_REG_LOAD_FINISH);
+                image_clk_off(1-sel, 1);
+                image_clk_off(1-sel, 0);
                 gdisp.screen[1-sel].image_output_type = 0;
             }
             Scaler_Release(layer_man->scaler_index, FALSE);      /*release a scaler object */
@@ -451,7 +454,15 @@ __s32 BSP_disp_layer_release(__u32 sel, __u32 hid)
     layer_man->para.prio = IDLE_PRIO;
     layer_man->status &= LAYER_USED_MASK&LAYER_OPEN_MASK;
     OSAL_IrqUnLock(cpu_sr);
-
+    if(((gdisp.screen[sel].layer_manage[0].status&0x00000003)|
+        (gdisp.screen[sel].layer_manage[1].status&0x00000003)|
+        (gdisp.screen[sel].layer_manage[2].status&0x00000003)|
+        (gdisp.screen[sel].layer_manage[3].status&0x00000003))==0)
+    {
+        DE_BE_DisableINT(sel, DE_IMG_REG_LOAD_FINISH);
+        Image_close(sel);
+        image_clk_off(sel, 0);
+    }
     return DIS_SUCCESS;
 }
 
@@ -918,8 +929,9 @@ __s32 BSP_disp_layer_set_para(__u32 sel, __u32 hid,__disp_layer_info_t *player)
         	    scaler->in_fb.mode = DISP_MOD_INTERLEAVED;
         	    scaler->in_fb.br_swap = FALSE;
         	    scaler->in_fb.cs_mode = DISP_BT601;
-        	    image_clk_on(sel);
-        	    Image_open(1 - sel);
+                    image_clk_on(1-sel, 0);
+                    Image_open(1 - sel);
+                    DE_BE_EnableINT(1-sel, DE_IMG_REG_LOAD_FINISH);
         	    DE_BE_Output_Select(1-sel, 6+layer_man->scaler_index);
         	    DE_SCAL_Input_Select(layer_man->scaler_index, 6 + (1-sel));
         	    gdisp.screen[1-sel].image_output_type = IMAGE_OUTPUT_SCALER;

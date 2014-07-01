@@ -53,6 +53,7 @@ typedef struct audio_timing
 	__s32 ACR_N; 	
 	__s32 CH_STATUS0; 		
 	__s32 CH_STATUS1; 	 	
+	__u8	data_raw;		/*0:pcm;1:raw*/
 
 }HDMI_AUDIO_INFO;
 
@@ -67,15 +68,16 @@ __s32 get_audio_info(__s32 sample_rate);
 __s32 video_config(__s32 vic);
 __s32 audio_config(void);
 
-extern __u32 hdmi_pll;//0:video pll 0; 1:video pll 1
-extern __u32 hdmi_clk;
-
-
+extern __u32    hdmi_pll;//0:video pll 0; 1:video pll 1
+extern __u32    hdmi_clk;
+extern __s32    cts_enable;
+extern __u8     isHDMI;
+extern __u8  	YCbCr444_Support;
 void DDC_Init(void);
 void send_ini_sequence(void);
 __s32 DDC_Read(char cmd,char pointer,char offset,int nbyte,char * pbuf);
-extern 	__u8		EDID_Buf[1024];
-extern 	__u8		Device_Support_VIC[512];
+extern 	__u8	EDID_Buf[1024];
+extern 	__u8	Device_Support_VIC[512];
 
 #endif
 

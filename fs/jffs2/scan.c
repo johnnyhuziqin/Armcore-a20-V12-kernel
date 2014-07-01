@@ -260,8 +260,8 @@ int jffs2_scan_medium(struct jffs2_sb_info *c)
 		if ( !c->used_size && ((c->nr_free_blocks+empty_blocks+bad_blocks)!= c->nr_blocks || bad_blocks == c->nr_blocks) ) {
 			printk(KERN_NOTICE "Cowardly refusing to erase blocks on filesystem with no valid JFFS2 nodes\n");
 			printk(KERN_NOTICE "empty_blocks %d, bad_blocks %d, c->nr_blocks %d\n",empty_blocks,bad_blocks,c->nr_blocks);
-			//ret = -EIO;
-			//goto out;
+			ret = -EIO;
+			goto out;
 		}
 		spin_lock(&c->erase_completion_lock);
 		jffs2_garbage_collect_trigger(c);

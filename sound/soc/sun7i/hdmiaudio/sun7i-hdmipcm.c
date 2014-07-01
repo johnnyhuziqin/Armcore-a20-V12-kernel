@@ -43,7 +43,7 @@ static const struct snd_pcm_hardware sun7i_pcm_hardware = {
 	.buffer_bytes_max	= 128*1024,    /* value must be (2^n)Kbyte size */
 	.period_bytes_min	= 1024*4,
 	.period_bytes_max	= 1024*32,
-	.periods_min		= 2,
+	.periods_min		= 4,
 	.periods_max		= 8,
 	.fifo_size			= 128,
 };

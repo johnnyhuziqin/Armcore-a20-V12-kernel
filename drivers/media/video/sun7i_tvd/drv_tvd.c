@@ -196,21 +196,17 @@ static int tvd_clk_init(struct tvd_dev *dev,int interface)
        	        __err("get tvd dram clock error!\n");
 		return -1;
         }
-
+    
 	module_clk_src=clk_get(NULL,"video_pll0"); //can select video_pll0 or video_pll1
 	if (NULL == module_clk_src || IS_ERR(module_clk_src))
         {
    		__err("get tvd clock source error!\n");	
 		return -1;
-        }
-
-        if (interface == 2) {//YpbPr_P
-		//ret = clk_set_rate(module_clk_src, 330000000); //264000000//297000000
-		ret = clk_set_rate(module_clk_src, 270000000); //264000000//297000000
-	} else {//CVBS and YPbPr_I
+        }  
+        if(interface==2)
+    		ret = clk_set_rate(module_clk_src, 330000000); //264000000//297000000
+        else
     		ret = clk_set_rate(module_clk_src, 297000000); //264000000//297000000
-	}
-
 	if (ret == -1)
         {
                 __err("set tvd parent clock error!\n");
@@ -222,25 +218,6 @@ static int tvd_clk_init(struct tvd_dev *dev,int interface)
         {
                 __err("set tvd parent clock error!\n");
 	        return -1;
-        }
-
-	/* add by yaowenjun@allwinnertech.com
-	 * spec p77 TVD_CLK_REG
-	 * bit[3-0] set TVD_CLK divid ratio(m)
-	 * the per-divided clock is divided by(m+1). the divider is from
-	 * 1 to 16
-	 * 0xb,0x5 from dulianping@allwinnertech.com
-	 */
-        if (interface == 2) {//YpbPr_P
-		ret = clk_set_rate(dev->module1_clk, 270000000 / 0x5);
-	} else {//CVBS and YPbPr_I
-		ret = clk_set_rate(dev->module1_clk, 297000000 / 0xb);
-	}
-
-	if (ret == -1)
-        {
-                __err("set tvd clk rate error!\n");
-	return -1;
         }
 
         if(NULL == module_clk_src || IS_ERR(module_clk_src))
@@ -991,7 +968,7 @@ static int buffer_setup(struct videobuf_queue *vq, unsigned int *count, unsigned
 			break;	
 		case TVD_PL_YUV422:
 		default:
-			*size = dev->width * dev->height * 3/2;
+			*size = dev->width * dev->height * 2;
 			break;
 	}
 	

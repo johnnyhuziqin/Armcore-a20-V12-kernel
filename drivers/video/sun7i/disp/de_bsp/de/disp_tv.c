@@ -13,10 +13,10 @@ __s32 Disp_Switch_Dram_Mode(__u32 type, __u8 tv_mod)
 __s32 Disp_TVEC_Init(__u32 sel)
 {
     __s32 ret = 0, value = 0;
-    
+
     tve_clk_init(sel);
     tve_clk_on(sel);
-	TVE_init(sel);
+    TVE_init(sel);
     tve_clk_off(sel);
 
     gdisp.screen[sel].dac_source[0] = DISP_TV_DAC_SRC_Y;
@@ -191,21 +191,25 @@ __s32 BSP_disp_tv_open(__u32 sel)
 
         tv_mod = gdisp.screen[sel].tv_mode;
 
-        image_clk_on(sel);
+        image_clk_on(sel, 0);
+        image_clk_on(sel, 1);
         Image_open(sel);//set image normal channel start bit , because every de_clk_off( )will reset this bit
-
+        DE_BE_EnableINT(sel, DE_IMG_REG_LOAD_FINISH);
         disp_clk_cfg(sel,DISP_OUTPUT_TYPE_TV, tv_mod);
         tve_clk_on(sel);
-        lcdc_clk_on(sel);
-
-        BSP_disp_set_output_csc(sel, DISP_OUTPUT_TYPE_TV);
+        lcdc_clk_on(sel, 1, 0);
+        lcdc_clk_on(sel, 1, 1);
+        Disp_lcdc_reg_isr(sel);
+        LCDC_init(sel);
+        gdisp.screen[sel].output_csc_type = DISP_OUT_CSC_TYPE_TV;
+        BSP_disp_set_output_csc(sel, gdisp.screen[sel].output_csc_type);
         DE_BE_set_display_size(sel, tv_mode_to_width(tv_mod), tv_mode_to_height(tv_mod));
         DE_BE_Output_Select(sel, sel);
         
         tcon1_set_tv_mode(sel,tv_mod);
         TVE_set_tv_mode(sel, tv_mod);	
         Disp_TVEC_DacCfg(sel, tv_mod);
-		
+
         tcon1_open(sel);
         Disp_TVEC_Open(sel);
 
@@ -250,12 +254,10 @@ __s32 BSP_disp_tv_close(__u32 sel)
 {
     if(gdisp.screen[sel].status & TV_ON)
     {        
-        Image_close(sel);
         tcon1_close(sel);
         Disp_TVEC_Close(sel);
-
         tve_clk_off(sel);
-        image_clk_off(sel);
+        image_clk_off(sel, 1);
         lcdc_clk_off(sel);
         
 #ifdef __LINUX_OSAL__
@@ -415,3 +417,57 @@ __s32 BSP_disp_tv_set_src(__u32 sel, __disp_lcdc_src_t src)
     return DIS_SUCCESS;
 }
 
+__s32 BSP_disp_store_tvec_reg(__u32 sel, __u32 addr)
+{
+        __u32 i = 0;
+        __u32 value = 0;
+        __u32 reg_base = 0;
+
+        if(sel == 0)
+        {
+                reg_base = gdisp.init_para.base_tvec0;
+        }
+        else
+        {
+                reg_base = gdisp.init_para.base_tvec1;
+        }
+
+        for(i=0; i<0x210; i+=4)
+        {
+                value = sys_get_wvalue(reg_base + i);
+                sys_put_wvalue(addr + i, value);
+        }
+
+        return 0;
+}
+
+
+__s32 BSP_disp_restore_tvec_reg(__u32 sel ,__u32 addr)
+{
+        __u32 i = 0;
+        __u32 value = 0;
+        __u32 reg_base = 0;
+
+        if(sel == 0)
+        {
+                reg_base = gdisp.init_para.base_tvec0;
+        }
+        else
+        {
+                reg_base = gdisp.init_para.base_tvec1;
+        }
+
+        for(i=8; i<0x210; i+=4)
+        {
+                value = sys_get_wvalue(addr + i);
+                sys_put_wvalue(reg_base + i,value);
+        }
+
+        value = sys_get_wvalue(addr);
+        sys_put_wvalue(reg_base,value);
+
+        value = sys_get_wvalue(addr + 4);
+        sys_put_wvalue(reg_base + 4,value);
+
+        return 0;
+}
