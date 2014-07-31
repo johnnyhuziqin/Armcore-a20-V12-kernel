@@ -47,6 +47,10 @@
 #include <mach/includes.h>
 #include <mach/timer.h>
 
+#include <linux/i2c/at24.h>
+#include <linux/i2c.h>
+
+
 #include "core.h"
 
 void sw_pdev_init(void);
@@ -195,11 +199,30 @@ static void sun7i_restart(char mode, const char *cmd)
 	}
 }
 
+/*
+ * I2C devices
+ */
+static struct at24_platform_data at24c16 = {
+	.byte_len	= SZ_16K / 8,
+	.page_size	= 16,
+};
+
+static struct i2c_board_info sun7i_i2c_devs[] __initdata = {
+	{
+		I2C_BOARD_INFO("24c16", 0x50),
+		.platform_data = &at24c16,
+	},
+};
+
+
 static void __init sun7i_init(void)
 {
 	pr_info("%s: enter\n", __func__);
 	sw_pdev_init();
 	/* Register platform devices here!! */
+
+	i2c_register_board_info(1, sun7i_i2c_devs,
+				ARRAY_SIZE(sun7i_i2c_devs));
 }
 
 void __init sun7i_init_early(void)

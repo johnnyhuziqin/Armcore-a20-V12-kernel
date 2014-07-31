@@ -137,8 +137,10 @@ static int ctp_detect(struct i2c_client *client, struct i2c_board_info *info)
     		                return 0;
                         }                   
                 }
+          	strlcpy(info->type, CTP_NAME, I2C_NAME_SIZE);
         	printk("%s:I2C connection might be something wrong ! \n",__func__);
-        	return -ENODEV;
+    		return 0;
+//        	return -ENODEV;
 	}else{
 		return -ENODEV;
 	}
@@ -1107,9 +1109,12 @@ static void ft5x_report_value(void)
 static void ft5x_ts_pen_irq_work(struct work_struct *work)
 {
 	int ret = -1;
+l_read_data:
 	ret = ft5x_read_data();
 	if (ret == 0) {
 		ft5x_report_value();
+		delay_ms(5);
+		goto l_read_data;
 	}
 	dprintk(DEBUG_INT_INFO,"%s:ret:%d\n",__func__,ret);
 }
@@ -1503,7 +1508,10 @@ static int __init ft5x_ts_init(void)
                 return ret;
         }
         
-	ctp_wakeup(0,20);  
+   	ctp_wakeup(0,100);
+        ctp_wakeup(1,100);
+        ctp_wakeup(0,100);
+	//ctp_wakeup(0,20);  
 		
 	ft5x_ts_driver.detect = ctp_detect;
 

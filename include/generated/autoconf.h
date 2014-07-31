@@ -463,8 +463,9 @@
 #define __enabled_CONFIG_MACH_OMAP3517EVM_MODULE 0
 #define __enabled_CONFIG_PARPORT_AMIGA 0
 #define __enabled_CONFIG_PARPORT_AMIGA_MODULE 0
-#define __enabled_CONFIG_MTD_AFS_PARTS 0
+#define __enabled_CONFIG_MTD_AFS_PARTS 1
 #define __enabled_CONFIG_MTD_AFS_PARTS_MODULE 0
+#define CONFIG_MTD_AFS_PARTS 1
 #define __enabled_CONFIG_ARCH_AT91RM9200 0
 #define __enabled_CONFIG_ARCH_AT91RM9200_MODULE 0
 #define __enabled_CONFIG_CGROUP_DEVICE 0
@@ -648,8 +649,9 @@
 #define __enabled_CONFIG_MFD_T7L66XB_MODULE 0
 #define __enabled_CONFIG_ATM_IA_DEBUG 0
 #define __enabled_CONFIG_ATM_IA_DEBUG_MODULE 0
-#define __enabled_CONFIG_MTD_CMDLINE_PARTS 0
+#define __enabled_CONFIG_MTD_CMDLINE_PARTS 1
 #define __enabled_CONFIG_MTD_CMDLINE_PARTS_MODULE 0
+#define CONFIG_MTD_CMDLINE_PARTS 1
 #define __enabled_CONFIG_KMEMCHECK_ENABLED_BY_DEFAULT 0
 #define __enabled_CONFIG_KMEMCHECK_ENABLED_BY_DEFAULT_MODULE 0
 #define __enabled_CONFIG_ZRAM_DEBUG 0
@@ -2154,8 +2156,9 @@
 #define __enabled_CONFIG_INFINIBAND_EHCA_MODULE 0
 #define __enabled_CONFIG_B43_PHY_LP 0
 #define __enabled_CONFIG_B43_PHY_LP_MODULE 0
-#define __enabled_CONFIG_MTD_CFI_I2 0
+#define __enabled_CONFIG_MTD_CFI_I2 1
 #define __enabled_CONFIG_MTD_CFI_I2_MODULE 0
+#define CONFIG_MTD_CFI_I2 1
 #define __enabled_CONFIG_CRYPTO_AUTHENC 1
 #define __enabled_CONFIG_CRYPTO_AUTHENC_MODULE 0
 #define CONFIG_CRYPTO_AUTHENC 1
@@ -2196,8 +2199,6 @@
 #define __enabled_CONFIG_ATL1E_MODULE 0
 #define __enabled_CONFIG_DEBUG_AW_R_UART 0
 #define __enabled_CONFIG_DEBUG_AW_R_UART_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_HID_RX_HIDTOUCH 0
-#define __enabled_CONFIG_TOUCHSCREEN_HID_RX_HIDTOUCH_MODULE 0
 #define __enabled_CONFIG_MACH_GLANTANK 0
 #define __enabled_CONFIG_MACH_GLANTANK_MODULE 0
 #define __enabled_CONFIG_BINFMT_EM86 0
@@ -2252,8 +2253,9 @@
 #define __enabled_CONFIG_ISDN_PPP_MODULE 0
 #define __enabled_CONFIG_MIGRATION 0
 #define __enabled_CONFIG_MIGRATION_MODULE 0
-#define __enabled_CONFIG_MTD 0
+#define __enabled_CONFIG_MTD 1
 #define __enabled_CONFIG_MTD_MODULE 0
+#define CONFIG_MTD 1
 #define __enabled_CONFIG_FB_TMIO_ACCELL 0
 #define __enabled_CONFIG_FB_TMIO_ACCELL_MODULE 0
 #define __enabled_CONFIG_HAVE_ARCH_JUMP_LABEL 0
@@ -2294,8 +2296,6 @@
 #define __enabled_CONFIG_N2_MODULE 0
 #define __enabled_CONFIG_I2C_AT91 0
 #define __enabled_CONFIG_I2C_AT91_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_QLTOUCH 0
-#define __enabled_CONFIG_TOUCHSCREEN_QLTOUCH_MODULE 0
 #define __enabled_CONFIG_SENSORS_AMC6821 0
 #define __enabled_CONFIG_SENSORS_AMC6821_MODULE 0
 #define __enabled_CONFIG_SENSORS_LIS3DH_ACC 0
@@ -2351,6 +2351,9 @@
 #define __enabled_CONFIG_INPUT_MOUSEDEV 1
 #define __enabled_CONFIG_INPUT_MOUSEDEV_MODULE 0
 #define CONFIG_INPUT_MOUSEDEV 1
+#define __enabled_CONFIG_SUN7I_VIBRATOR 1
+#define __enabled_CONFIG_SUN7I_VIBRATOR_MODULE 0
+#define CONFIG_SUN7I_VIBRATOR 1
 #define __enabled_CONFIG_FB_RADEON_BACKLIGHT 0
 #define __enabled_CONFIG_FB_RADEON_BACKLIGHT_MODULE 0
 #define __enabled_CONFIG_LIBERTAS_CS 0
@@ -2374,7 +2377,8 @@
 #define __enabled_CONFIG_GPIO_MAX730X 0
 #define __enabled_CONFIG_GPIO_MAX730X_MODULE 0
 #define __enabled_CONFIG_MTD_TESTS 0
-#define __enabled_CONFIG_MTD_TESTS_MODULE 0
+#define __enabled_CONFIG_MTD_TESTS_MODULE 1
+#define CONFIG_MTD_TESTS_MODULE 1
 #define __enabled_CONFIG_MFD_WM8994 0
 #define __enabled_CONFIG_MFD_WM8994_MODULE 0
 #define __enabled_CONFIG_PCMCIA_3C589 0
@@ -4035,8 +4039,6 @@
 #define __enabled_CONFIG_CP_INTC_MODULE 0
 #define __enabled_CONFIG_DELL_LAPTOP 0
 #define __enabled_CONFIG_DELL_LAPTOP_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_USB_XDIRTOUCH 0
-#define __enabled_CONFIG_TOUCHSCREEN_USB_XDIRTOUCH_MODULE 0
 #define __enabled_CONFIG_PPPOE 1
 #define __enabled_CONFIG_PPPOE_MODULE 0
 #define CONFIG_PPPOE 1
@@ -5296,8 +5298,6 @@
 #define __enabled_CONFIG_MFD_88PM860X_MODULE 0
 #define __enabled_CONFIG_SERIAL_QE 0
 #define __enabled_CONFIG_SERIAL_QE_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_OPT 0
-#define __enabled_CONFIG_TOUCHSCREEN_OPT_MODULE 0
 #define __enabled_CONFIG_DISCONTIGMEM_MANUAL 0
 #define __enabled_CONFIG_DISCONTIGMEM_MANUAL_MODULE 0
 #define __enabled_CONFIG_ARCH_PNX4008 0
@@ -6025,9 +6025,6 @@
 #define __enabled_CONFIG_NET_SCH_ATM_MODULE 0
 #define __enabled_CONFIG_WINBOND_840 0
 #define __enabled_CONFIG_WINBOND_840_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_USB_OPT_SONIX 1
-#define __enabled_CONFIG_TOUCHSCREEN_USB_OPT_SONIX_MODULE 0
-#define CONFIG_TOUCHSCREEN_USB_OPT_SONIX 1
 #define __enabled_CONFIG_FOOTBRIDGE_HOST 0
 #define __enabled_CONFIG_FOOTBRIDGE_HOST_MODULE 0
 #define __enabled_CONFIG_BFIN_UART3_CTSRTS 0
@@ -6827,8 +6824,6 @@
 #define __enabled_CONFIG_USB_SW_SUN7I_HCI 1
 #define __enabled_CONFIG_USB_SW_SUN7I_HCI_MODULE 0
 #define CONFIG_USB_SW_SUN7I_HCI 1
-#define __enabled_CONFIG_DEBUG_HID_SIS_INIT 0
-#define __enabled_CONFIG_DEBUG_HID_SIS_INIT_MODULE 0
 #define __enabled_CONFIG_MTD_ONENAND_OTP 0
 #define __enabled_CONFIG_MTD_ONENAND_OTP_MODULE 0
 #define __enabled_CONFIG_VIDEO_EM28XX_DVB 0
@@ -7389,8 +7384,6 @@
 #define __enabled_CONFIG_TEST_LIST_SORT_MODULE 0
 #define __enabled_CONFIG_SP5100_TCO 0
 #define __enabled_CONFIG_SP5100_TCO_MODULE 0
-#define __enabled_CONFIG_HID_SIS 0
-#define __enabled_CONFIG_HID_SIS_MODULE 0
 #define __enabled_CONFIG_SMC911X 0
 #define __enabled_CONFIG_SMC911X_MODULE 0
 #define __enabled_CONFIG_BLK_DEV_SR_VENDOR 1
@@ -7951,8 +7944,9 @@
 #define __enabled_CONFIG_VIDEO_SAMSUNG_S5P_HDMIPHY_MODULE 0
 #define __enabled_CONFIG_WANXL 0
 #define __enabled_CONFIG_WANXL_MODULE 0
-#define __enabled_CONFIG_MTD_CFI_I1 0
+#define __enabled_CONFIG_MTD_CFI_I1 1
 #define __enabled_CONFIG_MTD_CFI_I1_MODULE 0
+#define CONFIG_MTD_CFI_I1 1
 #define __enabled_CONFIG_NF_NAT 1
 #define __enabled_CONFIG_NF_NAT_MODULE 0
 #define CONFIG_NF_NAT 1
@@ -8853,8 +8847,6 @@
 #define __enabled_CONFIG_MACH_S3C2413_MODULE 0
 #define __enabled_CONFIG_OF_SPI 0
 #define __enabled_CONFIG_OF_SPI_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_GT9XX_TS 0
-#define __enabled_CONFIG_TOUCHSCREEN_GT9XX_TS_MODULE 0
 #define __enabled_CONFIG_MTD_ONENAND_GENERIC 0
 #define __enabled_CONFIG_MTD_ONENAND_GENERIC_MODULE 0
 #define __enabled_CONFIG_DA850_UI_NONE 0
@@ -9631,8 +9623,9 @@
 #define __enabled_CONFIG_RTC_DRV_X1205_MODULE 0
 #define __enabled_CONFIG_SND_SOC_SAMSUNG_SMDK_WM8994 0
 #define __enabled_CONFIG_SND_SOC_SAMSUNG_SMDK_WM8994_MODULE 0
-#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_1 0
+#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_1 1
 #define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_1_MODULE 0
+#define CONFIG_MTD_MAP_BANK_WIDTH_1 1
 #define __enabled_CONFIG_BATTERY_JZ4740 0
 #define __enabled_CONFIG_BATTERY_JZ4740_MODULE 0
 #define __enabled_CONFIG_MACH_SMDK6410 0
@@ -9908,6 +9901,9 @@
 #define __enabled_CONFIG_CAN_MSCAN_MODULE 0
 #define __enabled_CONFIG_FEC 0
 #define __enabled_CONFIG_FEC_MODULE 0
+#define __enabled_CONFIG_SW_TOUCHSCREEN_GT9XX 1
+#define __enabled_CONFIG_SW_TOUCHSCREEN_GT9XX_MODULE 0
+#define CONFIG_SW_TOUCHSCREEN_GT9XX 1
 #define __enabled_CONFIG_CDROM_PKTCDVD_WCACHE 0
 #define __enabled_CONFIG_CDROM_PKTCDVD_WCACHE_MODULE 0
 #define __enabled_CONFIG_NETFILTER_XT_MATCH_CONNTRACK 0
@@ -10856,9 +10852,6 @@
 #define CONFIG_LOCKDEP_SUPPORT 1
 #define __enabled_CONFIG_LIRC_PARALLEL 0
 #define __enabled_CONFIG_LIRC_PARALLEL_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_USB_CHANGJIAN_TOUCH 1
-#define __enabled_CONFIG_TOUCHSCREEN_USB_CHANGJIAN_TOUCH_MODULE 0
-#define CONFIG_TOUCHSCREEN_USB_CHANGJIAN_TOUCH 1
 #define __enabled_CONFIG_SND_SOC_TEGRA_WM8903 0
 #define __enabled_CONFIG_SND_SOC_TEGRA_WM8903_MODULE 0
 #define __enabled_CONFIG_MTD_VMAX 0
@@ -10999,8 +10992,9 @@
 #define __enabled_CONFIG_TOUCHSCREEN_GT82X 0
 #define __enabled_CONFIG_TOUCHSCREEN_GT82X_MODULE 1
 #define CONFIG_TOUCHSCREEN_GT82X_MODULE 1
-#define __enabled_CONFIG_MTD_BLKDEVS 0
+#define __enabled_CONFIG_MTD_BLKDEVS 1
 #define __enabled_CONFIG_MTD_BLKDEVS_MODULE 0
+#define CONFIG_MTD_BLKDEVS 1
 #define __enabled_CONFIG_ARM_HAS_SG_CHAIN 0
 #define __enabled_CONFIG_ARM_HAS_SG_CHAIN_MODULE 0
 #define __enabled_CONFIG_ACORN_PARTITION 0
@@ -11700,8 +11694,6 @@
 #define __enabled_CONFIG_SND_SOC_ZYLONITE_MODULE 0
 #define __enabled_CONFIG_PARIDE_ON26 0
 #define __enabled_CONFIG_PARIDE_ON26_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_FCTTOUCH 0
-#define __enabled_CONFIG_TOUCHSCREEN_FCTTOUCH_MODULE 0
 #define __enabled_CONFIG_FB_DA8XX 0
 #define __enabled_CONFIG_FB_DA8XX_MODULE 0
 #define __enabled_CONFIG_DM_DEBUG 0
@@ -12090,8 +12082,6 @@
 #define __enabled_CONFIG_S5P64X0_SETUP_SDHCI_GPIO_MODULE 0
 #define __enabled_CONFIG_W1_SLAVE_BQ27000 0
 #define __enabled_CONFIG_W1_SLAVE_BQ27000_MODULE 0
-#define __enabled_CONFIG_HID_SIS_UPDATE_FW 0
-#define __enabled_CONFIG_HID_SIS_UPDATE_FW_MODULE 0
 #define __enabled_CONFIG_BT_BNEP_PROTO_FILTER 0
 #define __enabled_CONFIG_BT_BNEP_PROTO_FILTER_MODULE 0
 #define __enabled_CONFIG_DMASOUND 0
@@ -12164,8 +12154,6 @@
 #define __enabled_CONFIG_USB_OTG_BLACKLIST_HUB_MODULE 0
 #define __enabled_CONFIG_PANEL_DVI 0
 #define __enabled_CONFIG_PANEL_DVI_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_USBIRTOUCH_IBOARD 0
-#define __enabled_CONFIG_TOUCHSCREEN_USBIRTOUCH_IBOARD_MODULE 0
 #define __enabled_CONFIG_CFS_BANDWIDTH 0
 #define __enabled_CONFIG_CFS_BANDWIDTH_MODULE 0
 #define __enabled_CONFIG_WM831X_WATCHDOG 0
@@ -13360,8 +13348,9 @@
 #define __enabled_CONFIG_MTD_NAND_BF5XX_BOOTROM_ECC_MODULE 0
 #define __enabled_CONFIG_XEN_NETDEV_FRONTEND 0
 #define __enabled_CONFIG_XEN_NETDEV_FRONTEND_MODULE 0
-#define __enabled_CONFIG_M25PXX_USE_FAST_READ 0
+#define __enabled_CONFIG_M25PXX_USE_FAST_READ 1
 #define __enabled_CONFIG_M25PXX_USE_FAST_READ_MODULE 0
+#define CONFIG_M25PXX_USE_FAST_READ 1
 #define __enabled_CONFIG_MTD_MBX860 0
 #define __enabled_CONFIG_MTD_MBX860_MODULE 0
 #define __enabled_CONFIG_DVB_TDA10048 0
@@ -13606,8 +13595,9 @@
 #define __enabled_CONFIG_MACH_E740_MODULE 0
 #define __enabled_CONFIG_NET_SCH_HTB 0
 #define __enabled_CONFIG_NET_SCH_HTB_MODULE 0
-#define __enabled_CONFIG_EEPROM_AT24 0
+#define __enabled_CONFIG_EEPROM_AT24 1
 #define __enabled_CONFIG_EEPROM_AT24_MODULE 0
+#define CONFIG_EEPROM_AT24 1
 #define __enabled_CONFIG_UIO_SERCOS3 0
 #define __enabled_CONFIG_UIO_SERCOS3_MODULE 0
 #define __enabled_CONFIG_HOSTAP_FIRMWARE_NVRAM 0
@@ -13922,6 +13912,9 @@
 #define __enabled_CONFIG_SH_WDT_MODULE 0
 #define __enabled_CONFIG_I2C_DESIGNWARE_PCI 0
 #define __enabled_CONFIG_I2C_DESIGNWARE_PCI_MODULE 0
+#define __enabled_CONFIG_RTL8723AU 0
+#define __enabled_CONFIG_RTL8723AU_MODULE 1
+#define CONFIG_RTL8723AU_MODULE 1
 #define __enabled_CONFIG_ASYNC_RAID6_TEST 0
 #define __enabled_CONFIG_ASYNC_RAID6_TEST_MODULE 0
 #define __enabled_CONFIG_MACH_DAVINCI_DA830_EVM 0
@@ -14047,8 +14040,6 @@
 #define __enabled_CONFIG_MACH_TREO680_MODULE 0
 #define __enabled_CONFIG_JOYSTICK_GAMECON 0
 #define __enabled_CONFIG_JOYSTICK_GAMECON_MODULE 0
-#define __enabled_CONFIG_TOUCHSCREEN_USBIRTOUCH_ST 0
-#define __enabled_CONFIG_TOUCHSCREEN_USBIRTOUCH_ST_MODULE 0
 #define __enabled_CONFIG_SCSI_ENCLOSURE 0
 #define __enabled_CONFIG_SCSI_ENCLOSURE_MODULE 0
 #define __enabled_CONFIG_KEYBOARD_SW_KEYBOARD 1
@@ -15359,8 +15350,9 @@
 #define __enabled_CONFIG_CAPI_AVM_MODULE 0
 #define __enabled_CONFIG_MACH_WBD222 0
 #define __enabled_CONFIG_MACH_WBD222_MODULE 0
-#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_2 0
+#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_2 1
 #define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_2_MODULE 0
+#define CONFIG_MTD_MAP_BANK_WIDTH_2 1
 #define __enabled_CONFIG_USB_AUDIO 0
 #define __enabled_CONFIG_USB_AUDIO_MODULE 0
 #define __enabled_CONFIG_VIDEO_TCM825X 0
@@ -15823,8 +15815,6 @@
 #define __enabled_CONFIG_MACH_DAVINCI_DM6467TEVM_MODULE 0
 #define __enabled_CONFIG_CRYPTO_AES_X86_64 0
 #define __enabled_CONFIG_CRYPTO_AES_X86_64_MODULE 0
-#define __enabled_CONFIG_DEBUG_HID_SIS_SENDPOINT 0
-#define __enabled_CONFIG_DEBUG_HID_SIS_SENDPOINT_MODULE 0
 #define __enabled_CONFIG_SND_IMX_SOC 0
 #define __enabled_CONFIG_SND_IMX_SOC_MODULE 0
 #define __enabled_CONFIG_STMMAC_TIMER 0
@@ -15927,8 +15917,9 @@
 #define __enabled_CONFIG_MMC_CB710_MODULE 0
 #define __enabled_CONFIG_NET_PACKET_ENGINE 0
 #define __enabled_CONFIG_NET_PACKET_ENGINE_MODULE 0
-#define __enabled_CONFIG_MTD_BLOCK 0
+#define __enabled_CONFIG_MTD_BLOCK 1
 #define __enabled_CONFIG_MTD_BLOCK_MODULE 0
+#define CONFIG_MTD_BLOCK 1
 #define __enabled_CONFIG_HVC_OPAL 0
 #define __enabled_CONFIG_HVC_OPAL_MODULE 0
 #define __enabled_CONFIG_W83697HF_WDT 0
@@ -16059,8 +16050,9 @@
 #define __enabled_CONFIG_SERIAL_MUX_CONSOLE_MODULE 0
 #define __enabled_CONFIG_SND_SOC_SH4_SIU 0
 #define __enabled_CONFIG_SND_SOC_SH4_SIU_MODULE 0
-#define __enabled_CONFIG_MTD_OOPS 0
+#define __enabled_CONFIG_MTD_OOPS 1
 #define __enabled_CONFIG_MTD_OOPS_MODULE 0
+#define CONFIG_MTD_OOPS 1
 #define __enabled_CONFIG_IWLEGACY 0
 #define __enabled_CONFIG_IWLEGACY_MODULE 0
 #define __enabled_CONFIG_SCSI_INIA100 0
@@ -16259,8 +16251,9 @@
 #define __enabled_CONFIG_IP_NF_TARGET_CLUSTERIP_MODULE 0
 #define __enabled_CONFIG_INPUT_SPARCSPKR 0
 #define __enabled_CONFIG_INPUT_SPARCSPKR_MODULE 0
-#define __enabled_CONFIG_MTD_BLOCK2MTD 0
+#define __enabled_CONFIG_MTD_BLOCK2MTD 1
 #define __enabled_CONFIG_MTD_BLOCK2MTD_MODULE 0
+#define CONFIG_MTD_BLOCK2MTD 1
 #define __enabled_CONFIG_W1_SLAVE_THERM 0
 #define __enabled_CONFIG_W1_SLAVE_THERM_MODULE 0
 #define __enabled_CONFIG_CAN_SLCAN 0
@@ -16543,8 +16536,6 @@
 #define __enabled_CONFIG_SLAB 1
 #define __enabled_CONFIG_SLAB_MODULE 0
 #define CONFIG_SLAB 1
-#define __enabled_CONFIG_DEBUG_HID_SIS_UPDATE_FW 0
-#define __enabled_CONFIG_DEBUG_HID_SIS_UPDATE_FW_MODULE 0
 #define __enabled_CONFIG_CYCLADES 0
 #define __enabled_CONFIG_CYCLADES_MODULE 0
 #define __enabled_CONFIG_KEYBOARD_LM8323 0
@@ -17045,8 +17036,6 @@
 #define __enabled_CONFIG_VIDEO_IVTV_MODULE 0
 #define __enabled_CONFIG_BFIN_UART0_CTSRTS 0
 #define __enabled_CONFIG_BFIN_UART0_CTSRTS_MODULE 0
-#define __enabled_CONFIG_SUN7I_GPIO_BUTTON 0
-#define __enabled_CONFIG_SUN7I_GPIO_BUTTON_MODULE 0
 #define __enabled_CONFIG_CYZ_INTR 0
 #define __enabled_CONFIG_CYZ_INTR_MODULE 0
 #define __enabled_CONFIG_S5P64X0_SD_CH1_8BIT 0
@@ -17172,8 +17161,9 @@
 #define CONFIG_STAGING 1
 #define __enabled_CONFIG_NET_VENDOR_SIS 0
 #define __enabled_CONFIG_NET_VENDOR_SIS_MODULE 0
-#define __enabled_CONFIG_MTD_CHAR 0
+#define __enabled_CONFIG_MTD_CHAR 1
 #define __enabled_CONFIG_MTD_CHAR_MODULE 0
+#define CONFIG_MTD_CHAR 1
 #define __enabled_CONFIG_MACH_TS41X 0
 #define __enabled_CONFIG_MACH_TS41X_MODULE 0
 #define __enabled_CONFIG_SOUND_TRACEINIT 0
@@ -18543,6 +18533,9 @@
 #define __enabled_CONFIG_DVB_USB_DIGITV_MODULE 0
 #define __enabled_CONFIG_BINFMT_ZFLAT 0
 #define __enabled_CONFIG_BINFMT_ZFLAT_MODULE 0
+#define __enabled_CONFIG_SW_TOUCHSCREEN_GT9XX_TS 0
+#define __enabled_CONFIG_SW_TOUCHSCREEN_GT9XX_TS_MODULE 1
+#define CONFIG_SW_TOUCHSCREEN_GT9XX_TS_MODULE 1
 #define __enabled_CONFIG_SYSCTL_SYSCALL_CHECK 0
 #define __enabled_CONFIG_SYSCTL_SYSCALL_CHECK_MODULE 0
 #define __enabled_CONFIG_IP6_NF_MATCH_HL 0
@@ -18590,8 +18583,9 @@
 #define __enabled_CONFIG_MTD_REDBOOT_PARTS_READONLY_MODULE 0
 #define __enabled_CONFIG_SAMSUNG_IRQ_VIC_TIMER 0
 #define __enabled_CONFIG_SAMSUNG_IRQ_VIC_TIMER_MODULE 0
-#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_4 0
+#define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_4 1
 #define __enabled_CONFIG_MTD_MAP_BANK_WIDTH_4_MODULE 0
+#define CONFIG_MTD_MAP_BANK_WIDTH_4 1
 #define __enabled_CONFIG_SND_SOC_SAMSUNG_SIMTEC_TLV320AIC23 0
 #define __enabled_CONFIG_SND_SOC_SAMSUNG_SIMTEC_TLV320AIC23_MODULE 0
 #define __enabled_CONFIG_S390_TAPE_3590 0
@@ -18890,8 +18884,9 @@
 #define __enabled_CONFIG_USER_WAKELOCK 1
 #define __enabled_CONFIG_USER_WAKELOCK_MODULE 0
 #define CONFIG_USER_WAKELOCK 1
-#define __enabled_CONFIG_MTD_M25P80 0
+#define __enabled_CONFIG_MTD_M25P80 1
 #define __enabled_CONFIG_MTD_M25P80_MODULE 0
+#define CONFIG_MTD_M25P80 1
 #define __enabled_CONFIG_FB_SGIVW 0
 #define __enabled_CONFIG_FB_SGIVW_MODULE 0
 #define __enabled_CONFIG_USB_KAWETH 0

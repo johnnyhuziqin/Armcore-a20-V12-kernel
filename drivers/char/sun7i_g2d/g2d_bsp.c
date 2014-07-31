@@ -1281,6 +1281,9 @@ __s32 mixer_stretchblt(g2d_stretchblt *para){
 			write_wvalue(G2D_DMA1_SIZE_REG, (para->src_rect.w -1) | ((para->src_rect.h -1)<<16));
 			reg_val = read_wvalue(G2D_DMA1_CONTROL_REG);
 			reg_val |= (5<<8) | G2D_IDMA_ENABLE;
+
+			/* rotate/mirror */
+			reg_val |= mixer_set_rotate_reg(para->flag);
 			write_wvalue(G2D_DMA1_CONTROL_REG, reg_val);
 		}
 		if((para->flag & G2D_BLT_PIXEL_ALPHA)||(para->flag & G2D_BLT_PLANE_ALPHA)||(para->flag & G2D_BLT_MULTI_ALPHA)||(para->flag & G2D_BLT_SRC_COLORKEY)||(para->flag & G2D_BLT_DST_COLORKEY))

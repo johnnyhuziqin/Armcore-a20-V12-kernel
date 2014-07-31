@@ -346,6 +346,8 @@ static int codec_capture_open(void)
 
 static int codec_play_start(void)
 {
+    headset_lradc();
+    codec_play_flag = 1;
 	//flush TX FIFO
 	codec_wr_control(SUN7I_DAC_FIFOC ,0x1, DAC_FIFO_FLUSH, 0x1);
 	//enable dac drq
@@ -355,6 +357,7 @@ static int codec_play_start(void)
 
 static int codec_play_stop(void)
 {	
+    codec_play_flag = 0;
 	//pa mute
 	codec_wr_control(SUN7I_DAC_ACTL, 0x1, PA_MUTE, 0x0);
 	mdelay(5);
@@ -454,6 +457,7 @@ static int codec_set_earpieceout(struct snd_kcontrol *kcontrol,
 	codec_earpiece_enabled = ucontrol->value.integer.value[0];
 
 	if (codec_earpiece_enabled) {
+        smdt_tvin_flag = 1;
 		/*line-in mode*/
 		codec_wr_control(SUN7I_ADC_ACTL, 0x1, line_in_mode, 0x0);
 		/*EN LINE-IN right channel and DAC left channel TO MIXER*/
@@ -483,6 +487,8 @@ static int codec_set_earpieceout(struct snd_kcontrol *kcontrol,
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, MIXEN, 0x0);
 		/*disable  MIXPAS*/
 		codec_wr_control(SUN7I_DAC_ACTL, 0x1, MIXPAS, 0x0);
+
+		codec_wr_control(SUN7I_DAC_ACTL, 0x1, DACPAS, 0x1);
 		/*disable PA*/
 		codec_wr_control(SUN7I_ADC_ACTL, 0x1, PA_ENABLE, 0x1);
         // add by cjcheng start. 2014-03-07
@@ -490,7 +496,8 @@ static int codec_set_earpieceout(struct snd_kcontrol *kcontrol,
             codec_wr_control(SUN7I_ADC_ACTL, 0x3, ADC_SELECT, 0x2);
         // add by cjcheng end. 2014-03-07
 		/*PA MUTE*/
-		codec_wr_control(SUN7I_DAC_ACTL, 0x1, PA_MUTE, 0x0);
+		codec_wr_control(SUN7I_DAC_ACTL, 0x1, PA_MUTE, 0x1);
+        smdt_tvin_flag = 0;
 	}
 
 	return ret;

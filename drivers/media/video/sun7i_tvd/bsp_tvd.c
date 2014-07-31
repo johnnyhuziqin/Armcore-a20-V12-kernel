@@ -72,7 +72,7 @@ void TVD_config(__u32 interface, __u32 system)
                                 break;
 		}
 	        REG_WR32(addr_base+0x0504,0x00000000);
-		REG_WR32(addr_base+0x052c,0x00110000);
+		REG_WR32(addr_base+0x052c,0xe0110000);
 		//1 channel cvbs
 	        //REG_WR32(addr_base+0x0500,0x00000111);	
 	        //REG_WR32(addr_base+0x0000,0x00000321);
@@ -98,7 +98,7 @@ void TVD_config(__u32 interface, __u32 system)
 				break;
 		}
 	        REG_WR32(addr_base+0x0504,0x00000000);
-		REG_WR32(addr_base+0x052c,0x00110000);
+		REG_WR32(addr_base+0x052c,0xe0110000);
 	        REG_WR32(addr_base+0x0500,0x00020711);
 	        REG_WR32(addr_base+0x0000,0x00000321);
 	}
@@ -107,25 +107,20 @@ void TVD_config(__u32 interface, __u32 system)
 		switch(system)
 		{
 			case TVD_NTSC://480p
-    				REG_WR32(addr_base+0x0008,0x00594001);
-                                REG_WR32(addr_base+0x0018,0x00002080);
-                                REG_WR32(addr_base+0x0080,0x00500082);
-                                REG_WR32(addr_base+0x0084,0x00610022);
-                                
-                                REG_WR32(addr_base+0x0008,0x80594001);
-                                REG_WR32(addr_base+0x0024,0x039db10a);
-                                REG_WR32(addr_base+0x0028,0x000037b1);
-                                REG_WR32(addr_base+0x0034,0x39999999);			    
+                REG_WR32(addr_base+0x0008,0x80594001);
+                REG_WR32(addr_base+0x0034,0x20000000);
+                REG_WR32(addr_base+0x0070,0x00002050);
 				break;
 			case TVD_PAL://576p not work
-			        REG_WR32(addr_base+0x0008,0x10594101);
-			        REG_WR32(addr_base+0x0018,0x00002480);
-			        REG_WR32(addr_base+0x0080,0x00500087);
-			        REG_WR32(addr_base+0x0084,0x00c10026);
-				break;
+                REG_WR32(addr_base+0x0008,0x90594101);
+                REG_WR32(addr_base+0x0034,0x20000000);
+                REG_WR32(addr_base+0x0070,0x00002050);
+                REG_WR32(addr_base+0x0080,0x00500087);
+                REG_WR32(addr_base+0x0084,0x00c10026);
+                break;
 		}
 	        REG_WR32(addr_base+0x0504,0x00000000);
-	        REG_WR32(addr_base+0x052c,0x00110000);
+	        REG_WR32(addr_base+0x052c,0xe0110000);
 	        REG_WR32(addr_base+0x0500,0x00020711);	
 	        REG_WR32(addr_base+0x0000,0x00000321);
 	}	

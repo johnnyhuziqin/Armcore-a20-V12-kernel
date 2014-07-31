@@ -104,14 +104,14 @@
 
 static unsigned char keypad_mapindex[64] =
 {
-    0,0,0,0,0,0,               //key 1, 6个， 0-5
-    1,1,1,1,1,1,1,                 //key 2, 7个， 6-12
-    2,2,2,2,2,2,2,2,2,                 //key 3, 9个， 13-21
-    3,3,3,3,3,3,3,3,3,                   //key 4, 9个， 22-30
+    0,0,               //key 4, 6个， 0-5
+    1,1,                 //key 3, 7个， 6-12
+    2,2,2,2,                 //key 1, 9个， 13-21
+    3,3,3,3,3,3,3,3,3,                   //key 2, 9个， 22-30
     4,4,4,4,                   //key 5, 4个， 31-34
     5,5,5,5,5,5,5,5,                  //key 6, 8个， 35-42
     6,6,6,6,6,6,6,6,6,           //key 7, 9个，43-51
-    7,7,7,7,7,7,7,7,7,7,7,7    //key 8, 12个，52-63
+    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,    //key 8, 12个，52-63
 };
 #endif
                         
@@ -138,10 +138,10 @@ static unsigned char keypad_mapindex[64] =
 #ifdef EVB
 static unsigned int sw_scankeycodes[KEY_MAX_CNT]=
 {
-	[0 ] = KEY_HOME,     
-	[1 ] = KEY_VOLUMEUP,   
-	[2 ] = KEY_MENU,       
-	[3 ] = KEY_DOWN,      
+	[0 ] = KEY_MENU,     
+	[1 ] = KEY_BACK,   
+	[2 ] = KEY_VOLUMEUP,       
+	[3 ] = KEY_VOLUMEDOWN,      
 	[4 ] = KEY_UP, 
 	[5 ] = KEY_ENTER,
 	[6 ] = KEY_VOLUMEDOWN,        

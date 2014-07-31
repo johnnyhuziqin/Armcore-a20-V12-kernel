@@ -334,7 +334,7 @@ LOAD ./../mem_timing.o
 LOAD ./../mem_divlib.o
 OUTPUT(standby.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x80ce
+.debug_info     0x00000000     0x809a
  .debug_info    0x00000000      0x5a3 standby.o
  .debug_info    0x000005a3      0x111 common.o
  .debug_info    0x000006b4     0x2759 standby_clock.o
@@ -344,18 +344,18 @@ OUTPUT(standby.elf elf32-littlearm)
  .debug_info    0x00003684      0x453 standby_tmr.o
  .debug_info    0x00003ad7      0x2a3 standby_twi.o
  .debug_info    0x00003d7a       0xf2 standby_usb.o
- .debug_info    0x00003e6c       0x88 standby_delay.o
- .debug_info    0x00003ef4      0x4a2 dram/dram.o
- .debug_info    0x00004396      0x674 dram/dram_init.o
- .debug_info    0x00004a0a       0x89 ./../mem_delay.o
- .debug_info    0x00004a93      0x1e0 ./../pm_debug.o
- .debug_info    0x00004c73       0x8e ./../mem_mmu_pc_asm.o
- .debug_info    0x00004d01      0x2ab ./../mem_serial.o
- .debug_info    0x00004fac      0x643 ./../mem_printk.o
- .debug_info    0x000055ef       0xe9 ./../mem_divlibc.o
- .debug_info    0x000056d8      0x253 ./../mem_int.o
- .debug_info    0x0000592b     0x2719 ./../mem_timing.o
- .debug_info    0x00008044       0x8a ./../mem_divlib.o
+ .debug_info    0x00003e6c       0x7b standby_delay.o
+ .debug_info    0x00003ee7      0x4a2 dram/dram.o
+ .debug_info    0x00004389      0x674 dram/dram_init.o
+ .debug_info    0x000049fd       0x7c ./../mem_delay.o
+ .debug_info    0x00004a79      0x1e0 ./../pm_debug.o
+ .debug_info    0x00004c59       0x81 ./../mem_mmu_pc_asm.o
+ .debug_info    0x00004cda      0x2ab ./../mem_serial.o
+ .debug_info    0x00004f85      0x643 ./../mem_printk.o
+ .debug_info    0x000055c8       0xe9 ./../mem_divlibc.o
+ .debug_info    0x000056b1      0x253 ./../mem_int.o
+ .debug_info    0x00005904     0x2719 ./../mem_timing.o
+ .debug_info    0x0000801d       0x7d ./../mem_divlib.o
 
 .debug_abbrev   0x00000000     0x12f5
  .debug_abbrev  0x00000000      0x154 standby.o
@@ -443,64 +443,64 @@ OUTPUT(standby.elf elf32-littlearm)
  .debug_aranges
                 0x00000280       0x20 ./../mem_divlib.o
 
-.debug_line     0x00000000     0x1596
- .debug_line    0x00000000      0x1e1 standby.o
- .debug_line    0x000001e1       0x83 common.o
- .debug_line    0x00000264      0x196 standby_clock.o
- .debug_line    0x000003fa       0xb9 standby_ir.o
- .debug_line    0x000004b3       0x78 standby_key.o
- .debug_line    0x0000052b      0x11a standby_power.o
- .debug_line    0x00000645       0xc3 standby_tmr.o
- .debug_line    0x00000708      0x177 standby_twi.o
- .debug_line    0x0000087f       0x5f standby_usb.o
- .debug_line    0x000008de       0x49 standby_delay.o
- .debug_line    0x00000927      0x12f dram/dram.o
- .debug_line    0x00000a56      0x248 dram/dram_init.o
- .debug_line    0x00000c9e       0x49 ./../mem_delay.o
- .debug_line    0x00000ce7       0xb0 ./../pm_debug.o
- .debug_line    0x00000d97      0x15e ./../mem_mmu_pc_asm.o
- .debug_line    0x00000ef5       0xe7 ./../mem_serial.o
- .debug_line    0x00000fdc      0x2ad ./../mem_printk.o
- .debug_line    0x00001289       0x69 ./../mem_divlibc.o
- .debug_line    0x000012f2       0xd2 ./../mem_int.o
- .debug_line    0x000013c4      0x151 ./../mem_timing.o
- .debug_line    0x00001515       0x81 ./../mem_divlib.o
+.debug_line     0x00000000     0x1562
+ .debug_line    0x00000000      0x1d4 standby.o
+ .debug_line    0x000001d4       0x83 common.o
+ .debug_line    0x00000257      0x189 standby_clock.o
+ .debug_line    0x000003e0       0xb9 standby_ir.o
+ .debug_line    0x00000499       0x78 standby_key.o
+ .debug_line    0x00000511      0x11a standby_power.o
+ .debug_line    0x0000062b       0xc3 standby_tmr.o
+ .debug_line    0x000006ee      0x177 standby_twi.o
+ .debug_line    0x00000865       0x5f standby_usb.o
+ .debug_line    0x000008c4       0x49 standby_delay.o
+ .debug_line    0x0000090d      0x12f dram/dram.o
+ .debug_line    0x00000a3c      0x248 dram/dram_init.o
+ .debug_line    0x00000c84       0x49 ./../mem_delay.o
+ .debug_line    0x00000ccd       0xb0 ./../pm_debug.o
+ .debug_line    0x00000d7d      0x15e ./../mem_mmu_pc_asm.o
+ .debug_line    0x00000edb       0xe7 ./../mem_serial.o
+ .debug_line    0x00000fc2      0x2a0 ./../mem_printk.o
+ .debug_line    0x00001262       0x69 ./../mem_divlibc.o
+ .debug_line    0x000012cb       0xd2 ./../mem_int.o
+ .debug_line    0x0000139d      0x144 ./../mem_timing.o
+ .debug_line    0x000014e1       0x81 ./../mem_divlib.o
 
-.debug_str      0x00000000     0x2688
- .debug_str     0x00000000      0x54c standby.o
-                                0x5c3 (size before relaxing)
- .debug_str     0x0000054c       0x46 common.o
-                                0x145 (size before relaxing)
- .debug_str     0x00000592     0x11a7 standby_clock.o
-                               0x13e7 (size before relaxing)
- .debug_str     0x00001739      0x151 standby_ir.o
-                                0x382 (size before relaxing)
- .debug_str     0x0000188a       0xd2 standby_key.o
-                                0x1cd (size before relaxing)
- .debug_str     0x0000195c       0xfc standby_power.o
-                                0x293 (size before relaxing)
- .debug_str     0x00001a58      0x1eb standby_tmr.o
-                                0x342 (size before relaxing)
- .debug_str     0x00001c43      0x11c standby_twi.o
-                                0x249 (size before relaxing)
- .debug_str     0x00001d5f       0x65 standby_usb.o
-                                0x165 (size before relaxing)
- .debug_str     0x00001dc4      0x1f4 dram/dram.o
-                                0x32d (size before relaxing)
- .debug_str     0x00001fb8      0x1f8 dram/dram_init.o
-                                0x431 (size before relaxing)
- .debug_str     0x000021b0       0x82 ./../pm_debug.o
-                                0x17c (size before relaxing)
- .debug_str     0x00002232       0xc3 ./../mem_serial.o
-                                0x1bd (size before relaxing)
- .debug_str     0x000022f5       0xf0 ./../mem_printk.o
-                                0x210 (size before relaxing)
- .debug_str     0x000023e5       0x48 ./../mem_divlibc.o
-                                0x137 (size before relaxing)
- .debug_str     0x0000242d       0x71 ./../mem_int.o
-                                0x270 (size before relaxing)
- .debug_str     0x0000249e      0x1ea ./../mem_timing.o
-                               0x134e (size before relaxing)
+.debug_str      0x00000000     0x267b
+ .debug_str     0x00000000      0x53f standby.o
+                                0x5b6 (size before relaxing)
+ .debug_str     0x0000053f       0x46 common.o
+                                0x138 (size before relaxing)
+ .debug_str     0x00000585     0x11a7 standby_clock.o
+                               0x13da (size before relaxing)
+ .debug_str     0x0000172c      0x151 standby_ir.o
+                                0x375 (size before relaxing)
+ .debug_str     0x0000187d       0xd2 standby_key.o
+                                0x1c0 (size before relaxing)
+ .debug_str     0x0000194f       0xfc standby_power.o
+                                0x286 (size before relaxing)
+ .debug_str     0x00001a4b      0x1eb standby_tmr.o
+                                0x335 (size before relaxing)
+ .debug_str     0x00001c36      0x11c standby_twi.o
+                                0x23c (size before relaxing)
+ .debug_str     0x00001d52       0x65 standby_usb.o
+                                0x158 (size before relaxing)
+ .debug_str     0x00001db7      0x1f4 dram/dram.o
+                                0x320 (size before relaxing)
+ .debug_str     0x00001fab      0x1f8 dram/dram_init.o
+                                0x424 (size before relaxing)
+ .debug_str     0x000021a3       0x82 ./../pm_debug.o
+                                0x16f (size before relaxing)
+ .debug_str     0x00002225       0xc3 ./../mem_serial.o
+                                0x1b0 (size before relaxing)
+ .debug_str     0x000022e8       0xf0 ./../mem_printk.o
+                                0x203 (size before relaxing)
+ .debug_str     0x000023d8       0x48 ./../mem_divlibc.o
+                                0x12a (size before relaxing)
+ .debug_str     0x00002420       0x71 ./../mem_int.o
+                                0x263 (size before relaxing)
+ .debug_str     0x00002491      0x1ea ./../mem_timing.o
+                               0x1341 (size before relaxing)
 
 .comment        0x00000000       0x64
  .comment       0x00000000       0x64 standby.o

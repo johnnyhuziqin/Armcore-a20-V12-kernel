@@ -234,22 +234,22 @@ LOAD ./../mem_divlibc.o
 LOAD ./../mem_divlib.o
 OUTPUT(resume0.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x88b1
+.debug_info     0x00000000     0x887d
  .debug_info    0x00000000      0x141 ./super/resume/resume_head.o
- .debug_info    0x00000141       0x91 ./super/resume/resume0.o
- .debug_info    0x000001d2       0xcb ./super/common.o
- .debug_info    0x0000029d     0x26c3 ./super/super_twi.o
- .debug_info    0x00002960       0x89 ./../mem_delay.o
- .debug_info    0x000029e9     0x2614 ./super/super_clock.o
- .debug_info    0x00004ffd       0xe4 ./super/resume/resume0_c_part.o
- .debug_info    0x000050e1      0x1e0 ./../pm_debug.o
- .debug_info    0x000052c1     0x2719 ./../mem_timing.o
- .debug_info    0x000079da       0x8e ./../mem_mmu_pc_asm.o
- .debug_info    0x00007a68      0x3e8 ./../mem_cpu.o
- .debug_info    0x00007e50      0x2ab ./../mem_serial.o
- .debug_info    0x000080fb      0x643 ./../mem_printk.o
- .debug_info    0x0000873e       0xe9 ./../mem_divlibc.o
- .debug_info    0x00008827       0x8a ./../mem_divlib.o
+ .debug_info    0x00000141       0x84 ./super/resume/resume0.o
+ .debug_info    0x000001c5       0xcb ./super/common.o
+ .debug_info    0x00000290     0x26c3 ./super/super_twi.o
+ .debug_info    0x00002953       0x7c ./../mem_delay.o
+ .debug_info    0x000029cf     0x2614 ./super/super_clock.o
+ .debug_info    0x00004fe3       0xe4 ./super/resume/resume0_c_part.o
+ .debug_info    0x000050c7      0x1e0 ./../pm_debug.o
+ .debug_info    0x000052a7     0x2719 ./../mem_timing.o
+ .debug_info    0x000079c0       0x81 ./../mem_mmu_pc_asm.o
+ .debug_info    0x00007a41      0x3e8 ./../mem_cpu.o
+ .debug_info    0x00007e29      0x2ab ./../mem_serial.o
+ .debug_info    0x000080d4      0x643 ./../mem_printk.o
+ .debug_info    0x00008717       0xe9 ./../mem_divlibc.o
+ .debug_info    0x00008800       0x7d ./../mem_divlib.o
 
 .debug_abbrev   0x00000000      0xbf0
  .debug_abbrev  0x00000000       0x7f ./super/resume/resume_head.o
@@ -268,46 +268,46 @@ OUTPUT(resume0.elf elf32-littlearm)
  .debug_abbrev  0x00000b5b       0x81 ./../mem_divlibc.o
  .debug_abbrev  0x00000bdc       0x14 ./../mem_divlib.o
 
-.debug_line     0x00000000      0xe4f
+.debug_line     0x00000000      0xe1b
  .debug_line    0x00000000       0x3d ./super/resume/resume_head.o
  .debug_line    0x0000003d       0x57 ./super/resume/resume0.o
  .debug_line    0x00000094       0x56 ./super/common.o
- .debug_line    0x000000ea      0x2cc ./super/super_twi.o
- .debug_line    0x000003b6       0x49 ./../mem_delay.o
- .debug_line    0x000003ff      0x11c ./super/super_clock.o
- .debug_line    0x0000051b       0x6b ./super/resume/resume0_c_part.o
- .debug_line    0x00000586       0xb0 ./../pm_debug.o
- .debug_line    0x00000636      0x151 ./../mem_timing.o
- .debug_line    0x00000787      0x15e ./../mem_mmu_pc_asm.o
- .debug_line    0x000008e5       0xec ./../mem_cpu.o
- .debug_line    0x000009d1       0xe7 ./../mem_serial.o
- .debug_line    0x00000ab8      0x2ad ./../mem_printk.o
- .debug_line    0x00000d65       0x69 ./../mem_divlibc.o
- .debug_line    0x00000dce       0x81 ./../mem_divlib.o
+ .debug_line    0x000000ea      0x2bf ./super/super_twi.o
+ .debug_line    0x000003a9       0x49 ./../mem_delay.o
+ .debug_line    0x000003f2      0x10f ./super/super_clock.o
+ .debug_line    0x00000501       0x6b ./super/resume/resume0_c_part.o
+ .debug_line    0x0000056c       0xb0 ./../pm_debug.o
+ .debug_line    0x0000061c      0x144 ./../mem_timing.o
+ .debug_line    0x00000760      0x15e ./../mem_mmu_pc_asm.o
+ .debug_line    0x000008be       0xec ./../mem_cpu.o
+ .debug_line    0x000009aa       0xe7 ./../mem_serial.o
+ .debug_line    0x00000a91      0x2a0 ./../mem_printk.o
+ .debug_line    0x00000d31       0x69 ./../mem_divlibc.o
+ .debug_line    0x00000d9a       0x81 ./../mem_divlib.o
 
-.debug_str      0x00000000     0x1acd
- .debug_str     0x00000000      0x166 ./super/resume/resume_head.o
-                                0x17f (size before relaxing)
- .debug_str     0x00000166       0x51 ./super/common.o
-                                0x113 (size before relaxing)
- .debug_str     0x000001b7     0x119a ./super/super_twi.o
-                               0x12e8 (size before relaxing)
- .debug_str     0x00001351      0x110 ./super/super_clock.o
-                               0x1272 (size before relaxing)
- .debug_str     0x00001461       0x73 ./super/resume/resume0_c_part.o
-                                0x155 (size before relaxing)
- .debug_str     0x000014d4       0x70 ./../pm_debug.o
-                                0x17c (size before relaxing)
- .debug_str     0x00001544      0x1f7 ./../mem_timing.o
-                               0x134e (size before relaxing)
- .debug_str     0x0000173b      0x17a ./../mem_cpu.o
-                                0x28f (size before relaxing)
- .debug_str     0x000018b5       0xc8 ./../mem_serial.o
-                                0x1bd (size before relaxing)
- .debug_str     0x0000197d      0x102 ./../mem_printk.o
-                                0x210 (size before relaxing)
- .debug_str     0x00001a7f       0x4e ./../mem_divlibc.o
-                                0x137 (size before relaxing)
+.debug_str      0x00000000     0x1ac0
+ .debug_str     0x00000000      0x159 ./super/resume/resume_head.o
+                                0x172 (size before relaxing)
+ .debug_str     0x00000159       0x51 ./super/common.o
+                                0x106 (size before relaxing)
+ .debug_str     0x000001aa     0x119a ./super/super_twi.o
+                               0x12db (size before relaxing)
+ .debug_str     0x00001344      0x110 ./super/super_clock.o
+                               0x1265 (size before relaxing)
+ .debug_str     0x00001454       0x73 ./super/resume/resume0_c_part.o
+                                0x148 (size before relaxing)
+ .debug_str     0x000014c7       0x70 ./../pm_debug.o
+                                0x16f (size before relaxing)
+ .debug_str     0x00001537      0x1f7 ./../mem_timing.o
+                               0x1341 (size before relaxing)
+ .debug_str     0x0000172e      0x17a ./../mem_cpu.o
+                                0x282 (size before relaxing)
+ .debug_str     0x000018a8       0xc8 ./../mem_serial.o
+                                0x1b0 (size before relaxing)
+ .debug_str     0x00001970      0x102 ./../mem_printk.o
+                                0x203 (size before relaxing)
+ .debug_str     0x00001a72       0x4e ./../mem_divlibc.o
+                                0x12a (size before relaxing)
 
 .comment        0x00000000       0x64
  .comment       0x00000000       0x64 ./super/resume/resume_head.o
