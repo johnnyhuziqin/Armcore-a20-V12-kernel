@@ -838,11 +838,6 @@ config TOUCHSCREEN_TPS6507X
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called tps6507x_ts.
-
-config TOUCHSCREEN_SIS
-       tristate  "sis touchscreen driver"
-       help
-         sis touchscreen driver
          
 config TOUCHSCREEN_FT5X_TS
        tristate  "ft5x touchscreen driver"
@@ -871,4 +866,5 @@ config  TOUCHSCREEN_SUNXI_TS
            sunxi-ts touchscreen driver of resistance
 
            
+source "drivers/input/touchscreen/gt9xx/Kconfig"
 endif

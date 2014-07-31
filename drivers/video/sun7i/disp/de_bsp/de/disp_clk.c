@@ -916,12 +916,22 @@ static __s32 disp_pll_set(__u32 sel, __s32 videopll_sel, __u32 pll_freq, __u32 t
 	
 	if(type == DISP_OUTPUT_TYPE_LCD)	//lcd panel
 	{		
+        /*
 	    if(videopll_sel == 2)//sata pll, fix to 960M
 	    {
 	        videopll = SYS_CLK_PLL7X2;
 	        //pll_freq = ((pll_freq + 12000000)/ 24000000) * 24000000;
 	        //OSAL_CCMU_SetSrcFreq(AW_SYS_CLK_PLL6, pll_freq);
 	    }
+        */
+        if(videopll_sel == 2)//sata pll, fix to 960M
+        {
+            videopll = SYS_CLK_PLL6;
+            pll_freq/=2;
+            pll_freq = ((pll_freq + 12000000)/ 24000000) * 24000000;
+            OSAL_CCMU_SetSrcFreq(videopll, pll_freq);
+            videopll=SYS_CLK_PLL6X2;
+        }
 	    else//video pll0 or video pll1
 	    {
     		pll_2x_req = (pll_freq>381000000)?1:0;

@@ -1986,19 +1986,19 @@ static int sun7i_spi_get_cfg_csbitmap(int bus_num)
 	.offset = 0,
 };*/
 
-static struct flash_platform_data at25df641_info = {
+static struct flash_platform_data w25x20_info = {
     .name = "m25p80",
     .parts = NULL,
     .nr_parts = 0,
-    .type = "at25df641",
+    .type = "w25x20",
 };
 
 static struct spi_board_info norflash = {
     .modalias = "m25p80",
-    .platform_data = &at25df641_info,
+    .platform_data = &w25x20_info,
     .mode = SPI_MODE_0,
     .irq = 0,
-    .max_speed_hz = 10 * 1000 * 1000,
+    .max_speed_hz = 4*1000 * 1000,
     .bus_num = 0,
     .chip_select = 0,
 };
@@ -2007,10 +2007,10 @@ static void __init sun7i_spi_norflash(void)
 {
     if (spi_register_board_info(&norflash, 1)) {
         spi_err("%s: Register norflash:%s information failed\n",
-                __func__, at25df641_info.type);
+                __func__, w25x20_info.type);
     } else {
         spi_inf("%s: Register norflash:%s information OK\n",
-                __func__, at25df641_info.type);
+                __func__, w25x20_info.type);
     }
 }
 #else

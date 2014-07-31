@@ -15,91 +15,11 @@
 
 static int losc_err_flag = 0;
 
-//add by Lynx+ 20130418
-extern int pcf8563_read_time (struct rtc_time *tm);
-extern int pcf8563_set_time (struct rtc_time *tm);
-static int flag = 1;
-//add by Lynx+ 20130418
-
 #define IS_LEAP_YEAR(year) (((year)%400)==0 || (((year)%100)!=0 && ((year)%4)==0))
 
 /* get rtc time */
 static int sunxi_rtc_gettime(struct device *dev, struct rtc_time *rtc_tm)
 {
-    //add by Lynx+ 20130417
-    int temp = -5;
-    struct rtc_time my_rtc_tm;
-
-    if (flag == 0)
-    {
-        temp = pcf8563_read_time (&my_rtc_tm);
-        //printk ("Lynx ====> sun4_temp = %d \n",temp);
-    }
-
-    switch (temp)
-    {
-        case 0:
-            //	printk ("Lynx ===> Start the external RTC !!!!\n");
-            /*
-                    printk ("Lynx ---------> %s %s \n",__FILE__,__func__);
-                    printk ("sun4_my_rtc_tm.tm_sec = %d \n",my_rtc_tm.tm_sec);
-                    printk ("sun4_my_rtc_tm.tm_min = %d \n",my_rtc_tm.tm_min);
-                    printk ("sun4_my_rtc_tm.tm_hour = %d \n",my_rtc_tm.tm_hour);
-                    printk ("sun4_my_rtc_tm.tm_mday = %d \n",my_rtc_tm.tm_mday);
-                    printk ("sun4_my_rtc_tm.tm_mon = %d \n",my_rtc_tm.tm_mon);
-                    printk ("sun4_my_rtc_tm.tm_year = %d \n",my_rtc_tm.tm_year);
-                    */
-
-
-            rtc_tm->tm_sec  = my_rtc_tm.tm_sec;
-            rtc_tm->tm_min  = my_rtc_tm.tm_min;
-            rtc_tm->tm_hour = my_rtc_tm.tm_hour;
-
-            rtc_tm->tm_mday = my_rtc_tm.tm_mday;
-            rtc_tm->tm_mon  = my_rtc_tm.tm_mon;
-            rtc_tm->tm_year = my_rtc_tm.tm_year;
-
-            return 0;
-            break;
-
-        case -2:
-        case -3:
-            //	printk ("Initialize the RTC == > pcf8563  !!!");
-            //2010-1-10
-            my_rtc_tm.tm_sec = 10;
-            my_rtc_tm.tm_min = 1;
-            my_rtc_tm.tm_hour = 16;
-
-            my_rtc_tm.tm_mday = 9;
-            my_rtc_tm.tm_mon = 0;
-            my_rtc_tm.tm_year = 110;
-
-            pcf8563_set_time (&my_rtc_tm);
-
-
-            pcf8563_read_time (&my_rtc_tm);
-
-            rtc_tm->tm_sec  = my_rtc_tm.tm_sec;
-            rtc_tm->tm_min  = my_rtc_tm.tm_min;
-            rtc_tm->tm_hour = my_rtc_tm.tm_hour;
-
-            rtc_tm->tm_mday = my_rtc_tm.tm_mday;
-            rtc_tm->tm_mon  = my_rtc_tm.tm_mon;
-            rtc_tm->tm_year = my_rtc_tm.tm_year;
-
-            return 0;
-
-            break;
-        default:
-            //		if (flag == 0)
-            //			 printk ("Lynx ===> Start the interior RTC !!!!\n");
-            break;
-
-    }
-
-    flag = 0;
-
-    //add by Lynx- 20130417
 	unsigned int have_retried = 0;
 	rtc_hh_mm_ss hhmmss = {0};
 	rtc_yy_mm_dd yymmdd = {0};
@@ -161,24 +81,6 @@ static int sunxi_rtc_settime(struct device *dev, struct rtc_time *tm)
 	pr_info("%s(%d): time to set %d-%d-%d %d:%d:%d\n", __func__, __LINE__, tm->tm_year + 1900,
 		tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-    //add by Lynx+ 20130418
-    struct rtc_time my_tm = *tm;
-    int temp = 0;
-    temp = pcf8563_set_time (&my_tm);
-    /*
-    printk ("Lynx ---------> %s %s \n",__FILE__,__func__);
-    printk ("sun4_tm->tm_sec = %d \n",tm->tm_sec);
-    printk ("sun4_tm->tm_min = %d \n",tm->tm_min);
-    printk ("sun4_tm->tm_hour = %d \n",tm->tm_hour);
-    printk ("sun4_tm->tm_mday = %d \n",tm->tm_mday);
-    printk ("sun4_tm->tm_mon = %d \n",tm->tm_mon);
-    printk ("sun4_tm->tm_year = %d \n",tm->tm_year);
-    */
-    if (temp == 0)
-        udelay(70);
-    //	else
-    //		printk ("Lynx====>  No external RTC !!!!!!\n");
-    //add by Lynx- 20130418
 	/* int tm_year; years from 1900
 	 * int tm_mon; months since january 0-11
 	 * the input para tm->tm_year is the offset related 1900;

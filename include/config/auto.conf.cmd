@@ -405,6 +405,7 @@ deps_config := \
 	drivers/input/e_compass/Kconfig \
 	drivers/input/gyr/Kconfig \
 	drivers/input/misc/Kconfig \
+	drivers/input/touchscreen/gt9xx/Kconfig \
 	drivers/input/touchscreen/Kconfig \
 	drivers/input/tablet/Kconfig \
 	drivers/input/joystick/iforce/Kconfig \
@@ -432,6 +433,7 @@ deps_config := \
 	drivers/net/wan/Kconfig \
 	drivers/net/wimax/i2400m/Kconfig \
 	drivers/net/wimax/Kconfig \
+	drivers/net/wireless/rtl8723au/Kconfig \
 	drivers/net/wireless/rtl8723as/Kconfig \
 	drivers/net/wireless/rtl8189es/Kconfig \
 	drivers/net/wireless/rtl8188eu/Kconfig \
